@@ -7,18 +7,16 @@ from werkzeug.utils import secure_filename
 import yt_dlp
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'fbdownloader-secret-key')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'xiyad-media-pro-secret')
 limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])
 
 def is_facebook_url(url: str) -> bool:
-    url_lower = url.lower()
-    return "facebook.com" in url_lower or "fb.watch" in url_lower
+    return "facebook.com" in url.lower() or "fb.watch" in url.lower()
 
 def classify_url(url: str):
-    url_lower = url.lower()
-    if any(x in url_lower for x in ["/reel/", "/watch?", "/videos/", "fb.watch"]):
+    if any(x in url.lower() for x in ["/reel/", "/watch?", "/videos/", "fb.watch"]):
         return "video"
-    if "facebook.com" in url_lower:
+    if "facebook.com" in url.lower():
         return "page"
     return None
 
@@ -28,7 +26,7 @@ def scan_page_videos_yt(url: str) -> list:
         qs = parse_qs(parsed.query)
         profile_id = qs.get('id', [None])[0]
         if not profile_id:
-            raise ValueError("Could not extract profile ID.")
+            raise ValueError("Could not extract profile ID")
         videos_url = f"https://www.facebook.com/profile.php?id={profile_id}&sk=videos"
     else:
         if not url.endswith('/videos'):
@@ -36,12 +34,8 @@ def scan_page_videos_yt(url: str) -> list:
         videos_url = url
 
     ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'extract_flat': True,
-        'skip_download': True,
-        'force_generic_extractor': False,
-        'playlistend': 100,
+        'quiet': True, 'no_warnings': True, 'extract_flat': True,
+        'skip_download': True, 'force_generic_extractor': False, 'playlistend': 200,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(videos_url, download=False)
@@ -65,13 +59,7 @@ def scan_page_videos_yt(url: str) -> list:
     return videos
 
 def extract_single_video(url: str) -> dict:
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'extract_flat': False,
-        'skip_download': True,
-        'force_generic_extractor': False,
-    }
+    ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': False, 'skip_download': True}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
@@ -96,14 +84,11 @@ def extract_single_video(url: str) -> dict:
     description = info.get('description') or ''
     hashtags = list(set(re.findall(r'#(\w+)', description)))
     return {
-        'id': info.get('id'),
-        'title': info.get('title', ''),
+        'id': info.get('id'), 'title': info.get('title', ''),
         'thumbnail': info.get('thumbnail', ''),
         'duration': info.get('duration', 0),
-        'hd_url': hd_url,
-        'sd_url': sd_url,
-        'caption': description,
-        'hashtags': hashtags,
+        'hd_url': hd_url, 'sd_url': sd_url,
+        'caption': description, 'hashtags': hashtags,
         'upload_date': info.get('upload_date', ''),
         'view_count': info.get('view_count', 0),
         'like_count': info.get('like_count', 0),
@@ -118,9 +103,7 @@ def index():
 def scan_page():
     data = request.get_json()
     url = data.get('url', '').strip()
-    if not url:
-        return jsonify({'error': 'URL required'}), 400
-    if not is_facebook_url(url):
+    if not url or not is_facebook_url(url):
         return jsonify({'error': 'Invalid Facebook URL'}), 400
     try:
         videos = scan_page_videos_yt(url)
@@ -139,9 +122,7 @@ def scan_page():
 def extract():
     data = request.get_json()
     url = data.get('url', '').strip()
-    if not url:
-        return jsonify({'error': 'URL required'}), 400
-    if not is_facebook_url(url):
+    if not url or not is_facebook_url(url):
         return jsonify({'error': 'Invalid Facebook URL'}), 400
     try:
         result = extract_single_video(url)
@@ -149,15 +130,17 @@ def extract():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/upload-video', methods=['POST'])
+@app.route('/api/upload-reel', methods=['POST'])
 @limiter.limit("2 per minute")
-def upload_video():
-    page_access_token = request.form.get('page_access_token')
+def upload_reel():
+    page_token = request.form.get('page_token')
     title = request.form.get('title', '')
     description = request.form.get('description', '')
+    schedule_time = request.form.get('schedule_time', '')
+    publish_mode = request.form.get('publish_mode', 'PUBLISH_NOW')
     file = request.files.get('video_file')
 
-    if not page_access_token or not file:
+    if not page_token or not file:
         return jsonify({'error': 'Missing page token or video file'}), 400
 
     filename = secure_filename(file.filename)
@@ -166,23 +149,27 @@ def upload_video():
     file_size = os.path.getsize(filepath)
 
     try:
-        init_url = f"https://graph.facebook.com/v20.0/me/videos"
-        init_resp = requests.post(init_url, params={
-            'access_token': page_access_token,
+        # 1. Init upload session
+        init_url = "https://graph.facebook.com/v20.0/me/video_reels"
+        params = {
+            'access_token': page_token,
             'upload_phase': 'start',
             'file_size': file_size,
-        })
+        }
+        if publish_mode == 'SCHEDULED' and schedule_time:
+            params['scheduled_publish_time'] = schedule_time
+        init_resp = requests.post(init_url, params=params)
         init_data = init_resp.json()
         if 'error' in init_data:
             raise Exception(init_data['error']['message'])
 
-        upload_session_id = init_data.get('upload_session_id')
         video_id = init_data.get('video_id')
+        upload_url = init_data.get('upload_url')
 
-        upload_url = f"https://rupload.facebook.com/video-upload/v20.0/{video_id}"
+        # 2. Upload
         with open(filepath, 'rb') as f:
             upload_resp = requests.post(upload_url, headers={
-                'Authorization': f'OAuth {page_access_token}',
+                'Authorization': f'OAuth {page_token}',
                 'offset': '0',
                 'file_size': str(file_size),
                 'Content-Type': 'application/octet-stream',
@@ -190,14 +177,19 @@ def upload_video():
         if upload_resp.status_code != 200:
             raise Exception(f"Upload failed: {upload_resp.text}")
 
-        finish_url = f"https://graph.facebook.com/v20.0/me/videos"
-        finish_resp = requests.post(finish_url, params={
-            'access_token': page_access_token,
+        # 3. Finish
+        finish_url = "https://graph.facebook.com/v20.0/me/video_reels"
+        finish_params = {
+            'access_token': page_token,
             'upload_phase': 'finish',
-            'upload_session_id': upload_session_id,
+            'video_id': video_id,
             'title': title,
             'description': description,
-        })
+            'video_state': publish_mode,
+        }
+        if publish_mode == 'SCHEDULED' and schedule_time:
+            finish_params['scheduled_publish_time'] = schedule_time
+        finish_resp = requests.post(finish_url, params=finish_params)
         finish_data = finish_resp.json()
         if 'error' in finish_data:
             raise Exception(finish_data['error']['message'])
@@ -206,7 +198,7 @@ def upload_video():
         return jsonify({
             'success': True,
             'video_id': finish_data.get('id'),
-            'title': title,
+            'status': finish_data.get('status', 'published'),
         })
     except Exception as e:
         if os.path.exists(filepath):
