@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediaExtractor Pro · Public Video Saver</title>
+  <title>FB Video & Reels Scanner</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --primary: #1877F2; --primary-hover: #166FE5; --bg: #f0f2f5; --card-bg: #ffffffcc;
@@ -22,32 +21,29 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-      background: var(--bg); color: var(--text); transition: all 0.3s;
-      min-height: 100vh;
+      background: var(--bg); color: var(--text); transition: all 0.3s; min-height: 100vh;
     }
-    .container { max-width: 900px; margin: 0 auto; padding: 1rem; }
-    /* Header */
+    .container { max-width: 1000px; margin: 0 auto; padding: 1rem; }
     .navbar {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem 0; margin-bottom: 2rem;
+      padding: 1rem 0; margin-bottom: 2rem; flex-wrap: wrap; gap: 0.5rem;
     }
     .logo { display: flex; align-items: center; gap: 0.5rem; font-size: 1.8rem; font-weight: 700; color: var(--primary); }
-    .nav-links { display: flex; gap: 1rem; }
+    .nav-links { display: flex; gap: 0.8rem; flex-wrap: wrap; }
     .nav-links button {
       background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
       padding: 0.6rem 1.2rem; border-radius: 50px; cursor: pointer; font-weight: 600;
       color: var(--text); transition: all 0.2s;
     }
     .nav-links button:hover, .nav-links button.active { background: var(--primary); color: white; border-color: var(--primary); }
-    /* Cards */
     .card {
       background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
       border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem;
       animation: fadeIn 0.5s;
     }
     @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-    .input-group { display: flex; gap: 0.5rem; align-items: center; }
-    .input-group input { flex:1; padding:0.8rem 1rem; border:1px solid var(--border); border-radius:50px; background:var(--bg); color:var(--text); font-size:1rem; transition:0.2s; }
+    .input-group { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .input-group input { flex:1; min-width: 200px; padding:0.8rem 1rem; border:1px solid var(--border); border-radius:50px; background:var(--bg); color:var(--text); font-size:1rem; transition:0.2s; }
     .input-group input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(24,119,242,0.2); }
     .btn { padding:0.8rem 1.5rem; border:none; border-radius:50px; font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:0.5rem; }
     .btn-primary { background:var(--primary); color:white; }
@@ -62,61 +58,99 @@
     }
     @keyframes spin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
     .hidden { display:none !important; }
+    .status-badge {
+      display: inline-block; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem;
+    }
+    .status-connected { background: #e7f3e8; color: #1b7a28; }
+    .status-disconnected { background: #fbe3e4; color: #8b0000; }
+    body.dark .status-connected { background: #1b3a1b; color: #a3e4a3; }
+    body.dark .status-disconnected { background: #3a1c1c; color: #ffb0b0; }
+    .page-card, .video-card {
+      background: var(--card-bg); border-radius: 12px; padding: 1rem; display: flex; align-items: center;
+      gap: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 0.5rem;
+    }
+    .page-card img, .video-card img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
     .thumbnail-wrap { position:relative; margin-bottom:1rem; }
     .thumbnail-wrap img { width:100%; border-radius:12px; }
     .duration-badge {
       position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.7); color:white;
       padding:0.3rem 0.6rem; border-radius:6px; font-size:0.9rem;
     }
-    .hashtag {
-      display:inline-block; background:var(--primary); color:white; padding:0.2rem 0.8rem;
-      border-radius:20px; font-size:0.85rem; cursor:pointer; margin:0.2rem;
-    }
-    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    @media (max-width:600px) { .grid-2 { grid-template-columns:1fr; } .input-group { flex-direction:column; } }
     .toast {
       position:fixed; bottom:20px; right:20px; background:var(--primary); color:white;
       padding:1rem 1.5rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3);
       animation: slideUp 0.3s; z-index:999;
     }
     @keyframes slideUp { from { transform:translateY(100px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-    .chart-container { position:relative; height:300px; width:100%; }
+    @media (max-width:600px) { .input-group { flex-direction:column; } }
   </style>
 </head>
 <body class="light">
   <div class="container">
     <!-- Navbar -->
     <div class="navbar">
-      <div class="logo"><i class="fab fa-facebook-square"></i> MediaExtractor</div>
+      <div class="logo"><i class="fab fa-facebook-square"></i> FB Scanner</div>
       <div class="nav-links">
         <button id="navHome" class="active"><i class="fas fa-home"></i> Home</button>
+        <button id="navPages"><i class="fas fa-flag"></i> My Pages</button>
         <button id="navSettings"><i class="fas fa-cog"></i> Settings</button>
-        <button id="navDashboard"><i class="fas fa-chart-bar"></i> Dashboard</button>
         <button id="themeToggle"><i class="fas fa-moon"></i></button>
       </div>
     </div>
 
-    <!-- Home Section -->
+    <!-- Home / Scanner -->
     <div id="homeSection">
       <div class="card">
-        <h2 style="margin-bottom:1rem;">🔗 Paste a Public Facebook Link</h2>
-        <div class="input-group">
-          <input type="text" id="urlInput" placeholder="e.g., https://www.facebook.com/reel/123456" autocomplete="off">
-          <button id="fetchBtn" class="btn btn-primary"><i class="fas fa-download"></i> Extract</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div>
+            <h2><i class="fab fa-facebook"></i> Facebook Account</h2>
+            <p style="color:var(--text-secondary);">Connect to see your pages and unlock scanning.</p>
+          </div>
+          <div>
+            <span id="statusBadge" class="status-badge status-disconnected">🔴 Not Connected</span>
+            <button id="connectBtn" class="btn btn-primary"><i class="fab fa-facebook"></i> Connect Facebook</button>
+          </div>
         </div>
-        <div id="loading" class="hidden"><div class="spinner"></div><p style="text-align:center;">Extracting media...</p></div>
+        <div id="userInfo" class="hidden" style="margin-top:1rem;">
+          <p>👤 <strong id="userName"></strong></p>
+          <button id="logoutBtn" class="btn btn-outline btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
       </div>
-      <div id="error" class="hidden card" style="background:var(--error-bg); color:var(--error-text);"></div>
-      <div id="result" class="hidden card"></div>
+
+      <div class="card">
+        <h2>🔍 Scan a Public Page</h2>
+        <p style="color:var(--text-secondary); margin-bottom:1rem;">Paste a Facebook page URL to list all public videos & reels.</p>
+        <div class="input-group">
+          <input type="text" id="pageUrlInput" placeholder="https://www.facebook.com/NASA">
+          <button id="scanBtn" class="btn btn-primary"><i class="fas fa-search"></i> Scan</button>
+        </div>
+        <div id="scanLoading" class="hidden"><div class="spinner"></div><p style="text-align:center;">Scanning page...</p></div>
+      </div>
+
+      <div id="scanError" class="hidden card" style="background:var(--error-bg); color:var(--error-text);"></div>
+      <div id="scanResult" class="hidden card"></div>
     </div>
 
-    <!-- Settings Section -->
+    <!-- My Pages -->
+    <div id="pagesSection" class="hidden">
+      <div class="card">
+        <h2>📄 Your Pages</h2>
+        <p style="color:var(--text-secondary); margin-bottom:1rem;">Select a page to scan automatically.</p>
+        <div id="pagesList"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
     <div id="settingsSection" class="hidden">
       <div class="card">
-        <h2><i class="fas fa-cog"></i> API Settings</h2>
+        <h2>Connect Accounts</h2>
         <p style="color:var(--text-secondary); margin-bottom:1rem;">
-          Credentials are stored <strong>only in your browser</strong> (localStorage). They are never sent to the server.
+          Enter your Facebook App credentials to enable enhanced features (optional).<br>
+          <strong>Credentials are stored only in your browser.</strong>
         </p>
+        <div id="apiStatus" style="margin-bottom:1rem;">
+          Status: <span id="settingsStatusBadge" class="status-badge status-disconnected">Not Connected</span>
+        </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block; margin-bottom:0.3rem; font-weight:600;">Facebook App ID</label>
           <input type="text" id="appIdInput" placeholder="Enter your Facebook App ID" style="width:100%; padding:0.8rem; border-radius:50px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
@@ -129,57 +163,303 @@
           <button id="saveSettingsBtn" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
           <button id="resetSettingsBtn" class="btn btn-danger"><i class="fas fa-undo"></i> Reset Settings</button>
         </div>
-        <div id="settingsToast" class="hidden" style="margin-top:1rem; padding:0.8rem; background:var(--success); color:white; border-radius:12px;"></div>
-      </div>
-    </div>
-
-    <!-- Dashboard Section -->
-    <div id="dashboardSection" class="hidden">
-      <div class="card">
-        <h2>📊 Extraction Dashboard</h2>
-        <div class="grid-2" style="margin-top:1rem;">
-          <div style="text-align:center;"><h3 id="totalExtractions">0</h3><span>Total Extractions</span></div>
-          <div style="text-align:center;"><h3 id="successExtractions">0</h3><span>Success</span></div>
-          <div style="text-align:center;"><h3 id="failedExtractions">0</h3><span>Failed</span></div>
-          <div style="text-align:center;"><h3 id="recentUrl">-</h3><span>Last URL</span></div>
-        </div>
-        <div style="margin: 1.5rem 0;">
-          <canvas id="activityChart"></canvas>
-        </div>
-        <button id="clearHistoryBtn" class="btn btn-outline"><i class="fas fa-trash"></i> Clear History</button>
-      </div>
-      <div class="card">
-        <h3>📜 Recent Extractions</h3>
-        <div id="historyList" style="max-height:300px; overflow-y:auto;"></div>
       </div>
     </div>
   </div>
 
-  <!-- Toast notification -->
   <div id="toast" class="hidden toast"></div>
 
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
   <script>
     // ---------- State ----------
-    let history = JSON.parse(localStorage.getItem('fb_history') || '[]');
-    let settings = {
-      appId: localStorage.getItem('fb_app_id') || '',
-      appSecret: localStorage.getItem('fb_app_secret') || ''
+    const APP_ID_KEY = 'fb_app_id';
+    const APP_SECRET_KEY = 'fb_app_secret';
+    const ACCESS_TOKEN_KEY = 'fb_access_token';
+    const USER_ID_KEY = 'fb_user_id';
+    const USER_NAME_KEY = 'fb_user_name';
+
+    let fbInitialized = false;
+    let userAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY) || '';
+    let userId = localStorage.getItem(USER_ID_KEY) || '';
+    let userName = localStorage.getItem(USER_NAME_KEY) || '';
+    let appId = localStorage.getItem(APP_ID_KEY) || '';
+    let appSecret = localStorage.getItem(APP_SECRET_KEY) || '';
+
+    document.getElementById('appIdInput').value = appId;
+    document.getElementById('appSecretInput').value = appSecret;
+    updateSettingsStatus();
+
+    function updateSettingsStatus() {
+      const badge = document.getElementById('settingsStatusBadge');
+      const connected = appId && appSecret;
+      if (connected) {
+        badge.textContent = 'Connected';
+        badge.className = 'status-badge status-connected';
+      } else {
+        badge.textContent = 'Not Connected';
+        badge.className = 'status-badge status-disconnected';
+      }
+    }
+
+    if (appId) {
+      window.fbAsyncInit = function() {
+        FB.init({ appId: appId, cookie: true, xfbml: true, version: 'v20.0' });
+        fbInitialized = true;
+        checkLoginState();
+      };
+    }
+
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          userAccessToken = response.authResponse.accessToken;
+          userId = response.authResponse.userID;
+          localStorage.setItem(ACCESS_TOKEN_KEY, userAccessToken);
+          localStorage.setItem(USER_ID_KEY, userId);
+          fetchUserInfo();
+          updateUI(true);
+        } else {
+          clearLoginData();
+          updateUI(false);
+        }
+      });
+    }
+
+    function fetchUserInfo() {
+      FB.api('/me', { fields: 'name' }, function(response) {
+        if (response && !response.error) {
+          userName = response.name;
+          localStorage.setItem(USER_NAME_KEY, userName);
+          document.getElementById('userName').textContent = userName;
+          document.getElementById('userInfo').classList.remove('hidden');
+        }
+      });
+    }
+
+    function updateUI(connected) {
+      const statusBadge = document.getElementById('statusBadge');
+      const connectBtn = document.getElementById('connectBtn');
+      const userInfo = document.getElementById('userInfo');
+      if (connected) {
+        statusBadge.innerHTML = '🟢 Connected';
+        statusBadge.className = 'status-badge status-connected';
+        connectBtn.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+      } else {
+        statusBadge.innerHTML = '🔴 Not Connected';
+        statusBadge.className = 'status-badge status-disconnected';
+        connectBtn.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+      }
+    }
+
+    function clearLoginData() {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_ID_KEY);
+      localStorage.removeItem(USER_NAME_KEY);
+      userAccessToken = '';
+      userId = '';
+      userName = '';
+    }
+
+    // ---------- Buttons ----------
+    document.getElementById('connectBtn').addEventListener('click', () => {
+      if (!fbInitialized) {
+        showToast('Please save your App ID first in Settings.', '#ff4d4d');
+        return;
+      }
+      FB.login(response => {
+        if (response.authResponse) checkLoginState();
+        else showToast('Login cancelled.', '#ff4d4d');
+      }, { scope: 'public_profile,pages_show_list' });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      FB.logout(response => {
+        clearLoginData();
+        updateUI(false);
+        showToast('Logged out.', '#1877F2');
+      });
+    });
+
+    // ---------- Pages tab ----------
+    function loadMyPages() {
+      const list = document.getElementById('pagesList');
+      list.innerHTML = '<p>Loading...</p>';
+      FB.api('/me/accounts', 'GET', { fields: 'name,picture,access_token' }, response => {
+        if (response && !response.error && response.data) {
+          if (response.data.length === 0) {
+            list.innerHTML = '<p>No pages found.</p>';
+            return;
+          }
+          list.innerHTML = response.data.map(page => `
+            <div class="page-card" style="justify-content:space-between; cursor:pointer;" onclick="scanThisPage('${page.name}', 'https://www.facebook.com/${page.name}/')">
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <img src="${page.picture.data.url}" alt="${page.name}">
+                <strong>${page.name}</strong>
+              </div>
+              <button class="btn btn-outline btn-sm"><i class="fas fa-search"></i> Scan</button>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = '<p>Could not load pages.</p>';
+        }
+      });
+    }
+
+    window.scanThisPage = (name, url) => {
+      document.getElementById('pageUrlInput').value = url;
+      showSection('home');
+      performScan();
     };
 
-    // Load settings into fields
-    document.getElementById('appIdInput').value = settings.appId;
-    document.getElementById('appSecretInput').value = settings.appSecret;
+    // ---------- Scanning ----------
+    const scanBtn = document.getElementById('scanBtn');
+    const pageUrlInput = document.getElementById('pageUrlInput');
+    const scanLoading = document.getElementById('scanLoading');
+    const scanError = document.getElementById('scanError');
+    const scanResult = document.getElementById('scanResult');
+
+    scanBtn.addEventListener('click', performScan);
+    pageUrlInput.addEventListener('keypress', e => { if (e.key === 'Enter') performScan(); });
+
+    async function performScan() {
+      const url = pageUrlInput.value.trim();
+      if (!url) return;
+      scanResult.classList.add('hidden');
+      scanError.classList.add('hidden');
+      scanLoading.classList.remove('hidden');
+      try {
+        const res = await fetch('/api/scan-page', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Scan failed');
+        displayScanResults(data);
+      } catch (err) {
+        scanError.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${err.message}`;
+        scanError.classList.remove('hidden');
+      } finally {
+        scanLoading.classList.add('hidden');
+      }
+    }
+
+    function displayScanResults(data) {
+      const totalVids = data.total_videos;
+      const totalReels = data.total_reels;
+      const videos = data.videos || [];
+
+      let html = `<h2>📊 Scan Result</h2>
+        <div style="display:flex; gap:2rem; flex-wrap:wrap; margin:1rem 0;">
+          <div><strong>${totalVids}</strong> Total Videos</div>
+          <div><strong>${totalReels}</strong> Reels</div>
+        </div>
+        <button id="copyLinksBtn" class="btn btn-outline"><i class="fas fa-copy"></i> Copy All Links</button>
+        <button id="exportCSVBtn" class="btn btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+        <div id="videoList" style="margin-top:1rem;">`;
+
+      videos.forEach((v, i) => {
+        const minutes = Math.floor(v.duration / 60);
+        const seconds = Math.floor(v.duration % 60).toString().padStart(2, '0');
+        html += `
+          <div class="video-card" style="justify-content:space-between; flex-wrap:wrap;">
+            <div style="display:flex; gap:1rem; align-items:center;">
+              <img src="${v.thumbnail || 'https://via.placeholder.com/60?text=No+Img'}" alt="thumb">
+              <div>
+                <strong>${v.title || 'Untitled'}</strong>
+                <div style="font-size:0.85rem; color:var(--text-secondary);">
+                  ${v.duration ? `${minutes}:${seconds}` : 'N/A'}  ·  ${v.is_reel ? '🎞️ Reel' : '📹 Video'}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn btn-primary btn-sm" onclick="downloadVideo('${v.url.replace(/'/g, "\'")}')"><i class="fas fa-download"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="copyText('${v.url.replace(/'/g, "\'")}')"><i class="fas fa-copy"></i></button>
+            </div>
+          </div>`;
+      });
+
+      html += `</div>`;
+      scanResult.innerHTML = html;
+      scanResult.classList.remove('hidden');
+
+      document.getElementById('copyLinksBtn').onclick = () => {
+        const allLinks = videos.map(v => v.url).join('\n');
+        copyText(allLinks);
+      };
+      document.getElementById('exportCSVBtn').onclick = () => exportCSV(videos);
+    }
+
+    window.downloadVideo = async (videoUrl) => {
+      showToast('Extracting video...', '#1877F2');
+      try {
+        const res = await fetch('/api/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: videoUrl })
+        });
+        const info = await res.json();
+        if (!res.ok) throw new Error(info.error);
+        const dur = info.duration;
+        const mins = Math.floor(dur / 60);
+        const secs = Math.floor(dur % 60);
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0';
+        modal.style.width = '100%'; modal.style.height = '100%';
+        modal.style.background = 'rgba(0,0,0,0.7)'; modal.style.display = 'flex';
+        modal.style.alignItems = 'center'; modal.style.justifyContent = 'center';
+        modal.style.zIndex = '1000';
+        modal.innerHTML = `
+          <div class="card" style="max-width:600px; max-height:80vh; overflow-y:auto;">
+            <div class="thumbnail-wrap">
+              <img src="${info.thumbnail}" alt="thumb">
+              <span class="duration-badge">${dur ? `${mins}:${secs.toString().padStart(2,'0')}` : ''}</span>
+            </div>
+            <h3>${info.title || 'Untitled'}</h3>
+            <p style="color:var(--text-secondary);">${info.view_count?.toLocaleString() || 'N/A'} views · ${info.upload_date || 'Unknown date'}</p>
+            <p style="white-space:pre-wrap; color:var(--text-secondary);">${info.caption || ''}</p>
+            <div>${(info.hashtags||[]).map(t => `<span class="status-badge" style="margin:0.2rem;">#${t}</span>`).join('')}</div>
+            <div style="display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap;">
+              ${info.hd_url ? `<a href="${info.hd_url}" target="_blank" class="btn btn-primary"><i class="fas fa-cloud-download-alt"></i> HD Download</a>` : ''}
+              ${info.sd_url ? `<a href="${info.sd_url}" target="_blank" class="btn btn-outline"><i class="fas fa-download"></i> SD Download</a>` : ''}
+              <button class="btn btn-outline" onclick="navigator.clipboard.writeText('${info.hd_url || info.sd_url}')"><i class="fas fa-copy"></i> Copy Link</button>
+            </div>
+            <button class="btn btn-danger" style="margin-top:1rem;" onclick="this.closest('div').parentElement.remove()">Close</button>
+          </div>`;
+        document.body.appendChild(modal);
+      } catch (err) {
+        showToast('Download failed: ' + err.message, '#ff4d4d');
+      }
+    };
+
+    window.copyText = (text) => {
+      navigator.clipboard.writeText(text);
+      showToast('Copied!', '#1877F2');
+    };
+
+    function exportCSV(videos) {
+      let csv = 'Title,URL,Duration,Is Reel\n';
+      videos.forEach(v => {
+        csv += `"${v.title.replace(/"/g,'""')}","${v.url}",${v.duration},${v.is_reel}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'facebook_videos.csv'; a.click();
+    }
 
     // ---------- Navigation ----------
     const sections = {
       home: document.getElementById('homeSection'),
-      settings: document.getElementById('settingsSection'),
-      dashboard: document.getElementById('dashboardSection')
+      pages: document.getElementById('pagesSection'),
+      settings: document.getElementById('settingsSection')
     };
     const navButtons = {
       home: document.getElementById('navHome'),
-      settings: document.getElementById('navSettings'),
-      dashboard: document.getElementById('navDashboard')
+      pages: document.getElementById('navPages'),
+      settings: document.getElementById('navSettings')
     };
 
     function showSection(name) {
@@ -187,14 +467,14 @@
       sections[name].classList.remove('hidden');
       Object.values(navButtons).forEach(b => b.classList.remove('active'));
       navButtons[name].classList.add('active');
-      if (name === 'dashboard') updateDashboard();
+      if (name === 'pages' && userAccessToken) loadMyPages();
     }
 
     navButtons.home.addEventListener('click', () => showSection('home'));
+    navButtons.pages.addEventListener('click', () => showSection('pages'));
     navButtons.settings.addEventListener('click', () => showSection('settings'));
-    navButtons.dashboard.addEventListener('click', () => showSection('dashboard'));
 
-    // ---------- Theme toggle ----------
+    // ---------- Theme ----------
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = themeToggle.querySelector('i');
     function setTheme(dark) {
@@ -207,163 +487,50 @@
 
     // ---------- Settings ----------
     document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-      const appId = document.getElementById('appIdInput').value.trim();
-      const appSecret = document.getElementById('appSecretInput').value.trim();
-      localStorage.setItem('fb_app_id', appId);
-      localStorage.setItem('fb_app_secret', appSecret);
-      settings = { appId, appSecret };
-      showToast('Settings saved!', '#42B72A');
+      const newAppId = document.getElementById('appIdInput').value.trim();
+      const newAppSecret = document.getElementById('appSecretInput').value.trim();
+      localStorage.setItem(APP_ID_KEY, newAppId);
+      localStorage.setItem(APP_SECRET_KEY, newAppSecret);
+      appId = newAppId;
+      appSecret = newAppSecret;
+      updateSettingsStatus();
+      showToast('Settings saved! Reloading…', '#42B72A');
+      setTimeout(() => location.reload(), 1500);
     });
 
     document.getElementById('resetSettingsBtn').addEventListener('click', () => {
-      localStorage.removeItem('fb_app_id');
-      localStorage.removeItem('fb_app_secret');
+      localStorage.removeItem(APP_ID_KEY);
+      localStorage.removeItem(APP_SECRET_KEY);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_ID_KEY);
+      localStorage.removeItem(USER_NAME_KEY);
       document.getElementById('appIdInput').value = '';
       document.getElementById('appSecretInput').value = '';
-      settings = { appId: '', appSecret: '' };
+      appId = '';
+      appSecret = '';
+      clearLoginData();
+      updateUI(false);
+      updateSettingsStatus();
       showToast('Settings cleared.', '#ff4d4d');
     });
 
-    // ---------- Extraction ----------
-    const urlInput = document.getElementById('urlInput');
-    const fetchBtn = document.getElementById('fetchBtn');
-    const loadingDiv = document.getElementById('loading');
-    const errorDiv = document.getElementById('error');
-    const resultDiv = document.getElementById('result');
-
-    fetchBtn.addEventListener('click', extract);
-    urlInput.addEventListener('keypress', e => { if (e.key === 'Enter') extract(); });
-
-    async function extract() {
-      const url = urlInput.value.trim();
-      if (!url) return;
-      resultDiv.classList.add('hidden');
-      errorDiv.classList.add('hidden');
-      loadingDiv.classList.remove('hidden');
-      try {
-        const res = await fetch('/api/extract', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Extraction failed');
-        displayResult(data);
-        addHistory({ url, title: data.title, success: true, timestamp: new Date().toISOString() });
-        showToast('Extraction successful!', '#42B72A');
-      } catch (err) {
-        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${err.message}`;
-        errorDiv.classList.remove('hidden');
-        addHistory({ url, title: 'Failed', success: false, timestamp: new Date().toISOString() });
-        showToast('Extraction failed!', '#ff4d4d');
-      } finally {
-        loadingDiv.classList.add('hidden');
-      }
-    }
-
-    function displayResult(info) {
-      const dur = info.duration;
-      const mins = Math.floor(dur / 60);
-      const secs = Math.floor(dur % 60);
-      resultDiv.innerHTML = `
-        <div class="thumbnail-wrap">
-          <img src="${info.thumbnail}" alt="thumbnail">
-          <span class="duration-badge">${dur ? `${mins}:${secs.toString().padStart(2,'0')}` : ''}</span>
-        </div>
-        <h3>${info.title || 'Untitled'}</h3>
-        <p style="color:var(--text-secondary);">${info.view_count?.toLocaleString() || 'N/A'} views · ${info.upload_date || 'Unknown date'}</p>
-        <p style="white-space:pre-wrap; color:var(--text-secondary); margin:0.5rem 0;">${info.caption || ''}</p>
-        <div>${(info.hashtags||[]).map(t => `<span class="hashtag" onclick="copyText('#${t}')">#${t}</span>`).join(' ')}</div>
-        <div style="display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap;">
-          ${info.hd_url ? `<a href="${info.hd_url}" target="_blank" class="btn btn-primary"><i class="fas fa-cloud-download-alt"></i> HD Download</a>` : ''}
-          ${info.sd_url ? `<a href="${info.sd_url}" target="_blank" class="btn btn-outline"><i class="fas fa-download"></i> SD Download</a>` : ''}
-          <button class="btn btn-outline" onclick="copyInfo(${JSON.stringify(info)})"><i class="fas fa-copy"></i> Copy Info</button>
-        </div>
-      `;
-      resultDiv.classList.remove('hidden');
-    }
-
-    window.copyText = text => navigator.clipboard.writeText(text);
-    window.copyInfo = info => {
-      const txt = `Title: ${info.title}\nCaption: ${info.caption}\nHashtags: ${(info.hashtags||[]).map(t=>'#'+t).join(' ')}\nHD: ${info.hd_url}\nSD: ${info.sd_url}`;
-      navigator.clipboard.writeText(txt);
-      showToast('Info copied!', '#1877F2');
-    };
-
-    // ---------- History & Dashboard ----------
-    function addHistory(entry) {
-      history.unshift(entry);
-      if (history.length > 100) history = history.slice(0, 100); // limit
-      localStorage.setItem('fb_history', JSON.stringify(history));
-      if (!sections.dashboard.classList.contains('hidden')) updateDashboard();
-    }
-
-    function updateDashboard() {
-      const total = history.length;
-      const success = history.filter(e => e.success).length;
-      const failed = total - success;
-      document.getElementById('totalExtractions').textContent = total;
-      document.getElementById('successExtractions').textContent = success;
-      document.getElementById('failedExtractions').textContent = failed;
-      document.getElementById('recentUrl').textContent = total > 0 ? history[0].url.substring(0,40)+'...' : '-';
-
-      // Chart
-      const ctx = document.getElementById('activityChart')?.getContext('2d');
-      if (ctx) {
-        if (window.chartInstance) window.chartInstance.destroy();
-        const last7Days = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const dateStr = d.toISOString().split('T')[0];
-          const count = history.filter(e => e.timestamp.startsWith(dateStr)).length;
-          last7Days.push({ date: dateStr, count });
-        }
-        window.chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: last7Days.map(d => d.date),
-            datasets: [{
-              label: 'Extractions per day',
-              data: last7Days.map(d => d.count),
-              borderColor: '#1877F2',
-              backgroundColor: 'rgba(24,119,242,0.1)',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-
-      // History list
-      const listDiv = document.getElementById('historyList');
-      listDiv.innerHTML = history.slice(0, 20).map(e => `
-        <div style="padding:0.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-          <span><strong>${e.success ? '✅' : '❌'}</strong> ${e.title || e.url.substring(0,30)}</span>
-          <span style="color:var(--text-secondary);">${new Date(e.timestamp).toLocaleString()}</span>
-        </div>
-      `).join('') || '<p style="color:var(--text-secondary);">No extractions yet.</p>';
-    }
-
-    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-      history = [];
-      localStorage.removeItem('fb_history');
-      updateDashboard();
-      showToast('History cleared.', '#ff4d4d');
-    });
-
     // ---------- Toast ----------
-    function showToast(message, bgColor) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.background = bgColor;
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
+    function showToast(msg, bg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.style.background = bg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3000);
     }
 
-    // Initial dashboard load if needed
-    if (sections.dashboard && !sections.dashboard.classList.contains('hidden')) updateDashboard();
+    // Initial state
+    if (appId && userAccessToken) {
+      document.getElementById('statusBadge').innerHTML = '🟢 Connected';
+      document.getElementById('statusBadge').className = 'status-badge status-connected';
+      document.getElementById('connectBtn').classList.add('hidden');
+      document.getElementById('userInfo').classList.remove('hidden');
+      document.getElementById('userName').textContent = userName || 'User';
+    }
+    updateSettingsStatus();
   </script>
 </body>
-  </html>
+</html>
