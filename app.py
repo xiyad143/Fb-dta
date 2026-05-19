@@ -1,8 +1,9 @@
-import os, re
+import os, re, requests
 from urllib.parse import urlparse, parse_qs
 from flask import Flask, request, jsonify, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.utils import secure_filename
 import yt_dlp
 
 app = Flask(__name__)
@@ -22,22 +23,14 @@ def classify_url(url: str):
     return None
 
 def scan_page_videos_yt(url: str) -> list:
-    """
-    Scans a Facebook page or profile for public videos using yt-dlp.
-    Handles both page (e.g. /NASA) and profile (e.g. profile.php?id=123) URLs.
-    """
     parsed = urlparse(url)
-    # ---- Normalize to a video listing URL ----
     if 'profile.php' in parsed.path:
-        # Extract the numeric ID from query string
         qs = parse_qs(parsed.query)
         profile_id = qs.get('id', [None])[0]
         if not profile_id:
-            raise ValueError("Could not extract profile ID from the URL.")
-        # Build the correct “Videos” tab URL
+            raise ValueError("Could not extract profile ID.")
         videos_url = f"https://www.facebook.com/profile.php?id={profile_id}&sk=videos"
     else:
-        # Regular page: simply add /videos if not already present
         if not url.endswith('/videos'):
             url = url.rstrip('/') + '/videos'
         videos_url = url
@@ -45,12 +38,11 @@ def scan_page_videos_yt(url: str) -> list:
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'extract_flat': True,      # fast, no download
+        'extract_flat': True,
         'skip_download': True,
         'force_generic_extractor': False,
-        'playlistend': 100,        # fetch up to 100 recent videos
+        'playlistend': 100,
     }
-
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(videos_url, download=False)
 
@@ -157,6 +149,69 @@ def extract():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/upload-video', methods=['POST'])
+@limiter.limit("2 per minute")
+def upload_video():
+    page_access_token = request.form.get('page_access_token')
+    title = request.form.get('title', '')
+    description = request.form.get('description', '')
+    file = request.files.get('video_file')
+
+    if not page_access_token or not file:
+        return jsonify({'error': 'Missing page token or video file'}), 400
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join('/tmp', filename)
+    file.save(filepath)
+    file_size = os.path.getsize(filepath)
+
+    try:
+        init_url = f"https://graph.facebook.com/v20.0/me/videos"
+        init_resp = requests.post(init_url, params={
+            'access_token': page_access_token,
+            'upload_phase': 'start',
+            'file_size': file_size,
+        })
+        init_data = init_resp.json()
+        if 'error' in init_data:
+            raise Exception(init_data['error']['message'])
+
+        upload_session_id = init_data.get('upload_session_id')
+        video_id = init_data.get('video_id')
+
+        upload_url = f"https://rupload.facebook.com/video-upload/v20.0/{video_id}"
+        with open(filepath, 'rb') as f:
+            upload_resp = requests.post(upload_url, headers={
+                'Authorization': f'OAuth {page_access_token}',
+                'offset': '0',
+                'file_size': str(file_size),
+                'Content-Type': 'application/octet-stream',
+            }, data=f)
+        if upload_resp.status_code != 200:
+            raise Exception(f"Upload failed: {upload_resp.text}")
+
+        finish_url = f"https://graph.facebook.com/v20.0/me/videos"
+        finish_resp = requests.post(finish_url, params={
+            'access_token': page_access_token,
+            'upload_phase': 'finish',
+            'upload_session_id': upload_session_id,
+            'title': title,
+            'description': description,
+        })
+        finish_data = finish_resp.json()
+        if 'error' in finish_data:
+            raise Exception(finish_data['error']['message'])
+
+        os.remove(filepath)
+        return jsonify({
+            'success': True,
+            'video_id': finish_data.get('id'),
+            'title': title,
+        })
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-    
