@@ -169,7 +169,6 @@
 
   <div id="toast" class="hidden toast"></div>
 
-  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
   <script>
     // ---------- State ----------
     const APP_ID_KEY = 'fb_app_id';
@@ -178,7 +177,6 @@
     const USER_ID_KEY = 'fb_user_id';
     const USER_NAME_KEY = 'fb_user_name';
 
-    let fbInitialized = false;
     let userAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY) || '';
     let userId = localStorage.getItem(USER_ID_KEY) || '';
     let userName = localStorage.getItem(USER_NAME_KEY) || '';
@@ -188,6 +186,7 @@
     document.getElementById('appIdInput').value = appId;
     document.getElementById('appSecretInput').value = appSecret;
     updateSettingsStatus();
+    updateUI(!!userAccessToken);
 
     function updateSettingsStatus() {
       const badge = document.getElementById('settingsStatusBadge');
@@ -201,39 +200,69 @@
       }
     }
 
-    if (appId) {
-      window.fbAsyncInit = function() {
-        FB.init({ appId: appId, cookie: true, xfbml: true, version: 'v20.0' });
-        fbInitialized = true;
-        checkLoginState();
-      };
+    // ---------- OAuth flow ----------
+    const REDIRECT_URI = window.location.origin + '/';  // Must be whitelisted in app settings
+
+    document.getElementById('connectBtn').addEventListener('click', () => {
+      if (!appId) {
+        showToast('Please enter your App ID in Settings first.', '#ff4d4d');
+        return;
+      }
+      const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?` +
+        `client_id=${appId}` +
+        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+        `&response_type=token` +
+        `&scope=public_profile,pages_show_list`;
+      window.location.href = authUrl;
+    });
+
+    // Handle the redirect back with access token in URL fragment
+    function handleLoginRedirect() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get('access_token');
+      if (accessToken) {
+        userAccessToken = accessToken;
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        // Clear the URL fragment for security
+        window.location.hash = '';
+        // Fetch user info using Graph API
+        fetchUserProfile();
+      }
     }
 
-    function checkLoginState() {
-      FB.getLoginStatus(function(response) {
-        if (response.status === 'connected') {
-          userAccessToken = response.authResponse.accessToken;
-          userId = response.authResponse.userID;
-          localStorage.setItem(ACCESS_TOKEN_KEY, userAccessToken);
-          localStorage.setItem(USER_ID_KEY, userId);
-          fetchUserInfo();
-          updateUI(true);
-        } else {
-          clearLoginData();
-          updateUI(false);
-        }
-      });
+    async function fetchUserProfile() {
+      try {
+        const res = await fetch(`https://graph.facebook.com/me?fields=name&access_token=${userAccessToken}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        userName = data.name;
+        localStorage.setItem(USER_NAME_KEY, userName);
+        userId = data.id;
+        localStorage.setItem(USER_ID_KEY, userId);
+        updateUI(true);
+        showToast('Connected as ' + userName, '#42B72A');
+      } catch (err) {
+        showToast('Login error: ' + err.message, '#ff4d4d');
+        clearLoginData();
+        updateUI(false);
+      }
     }
 
-    function fetchUserInfo() {
-      FB.api('/me', { fields: 'name' }, function(response) {
-        if (response && !response.error) {
-          userName = response.name;
-          localStorage.setItem(USER_NAME_KEY, userName);
-          document.getElementById('userName').textContent = userName;
-          document.getElementById('userInfo').classList.remove('hidden');
-        }
-      });
+    // Logout (just clears local data, no server-side invalidation needed)
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      clearLoginData();
+      updateUI(false);
+      showToast('Logged out.', '#1877F2');
+    });
+
+    function clearLoginData() {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_ID_KEY);
+      localStorage.removeItem(USER_NAME_KEY);
+      userAccessToken = '';
+      userId = '';
+      userName = '';
     }
 
     function updateUI(connected) {
@@ -245,6 +274,7 @@
         statusBadge.className = 'status-badge status-connected';
         connectBtn.classList.add('hidden');
         userInfo.classList.remove('hidden');
+        document.getElementById('userName').textContent = userName || 'User';
       } else {
         statusBadge.innerHTML = '🔴 Not Connected';
         statusBadge.className = 'status-badge status-disconnected';
@@ -253,58 +283,36 @@
       }
     }
 
-    function clearLoginData() {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(USER_ID_KEY);
-      localStorage.removeItem(USER_NAME_KEY);
-      userAccessToken = '';
-      userId = '';
-      userName = '';
+    // Check for existing token on page load
+    if (userAccessToken && !userId) {
+      // token exists but no user info stored, fetch it
+      fetchUserProfile();
     }
 
-    // ---------- Buttons ----------
-    document.getElementById('connectBtn').addEventListener('click', () => {
-      if (!fbInitialized) {
-        showToast('Please save your App ID first in Settings.', '#ff4d4d');
-        return;
-      }
-      FB.login(response => {
-        if (response.authResponse) checkLoginState();
-        else showToast('Login cancelled.', '#ff4d4d');
-      }, { scope: 'public_profile,pages_show_list' });
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      FB.logout(response => {
-        clearLoginData();
-        updateUI(false);
-        showToast('Logged out.', '#1877F2');
-      });
-    });
-
     // ---------- Pages tab ----------
-    function loadMyPages() {
+    async function loadMyPages() {
       const list = document.getElementById('pagesList');
       list.innerHTML = '<p>Loading...</p>';
-      FB.api('/me/accounts', 'GET', { fields: 'name,picture,access_token' }, response => {
-        if (response && !response.error && response.data) {
-          if (response.data.length === 0) {
-            list.innerHTML = '<p>No pages found.</p>';
-            return;
-          }
-          list.innerHTML = response.data.map(page => `
-            <div class="page-card" style="justify-content:space-between; cursor:pointer;" onclick="scanThisPage('${page.name}', 'https://www.facebook.com/${page.name}/')">
-              <div style="display:flex; align-items:center; gap:1rem;">
-                <img src="${page.picture.data.url}" alt="${page.name}">
-                <strong>${page.name}</strong>
-              </div>
-              <button class="btn btn-outline btn-sm"><i class="fas fa-search"></i> Scan</button>
-            </div>
-          `).join('');
-        } else {
-          list.innerHTML = '<p>Could not load pages.</p>';
+      try {
+        const res = await fetch(`https://graph.facebook.com/me/accounts?fields=name,picture&access_token=${userAccessToken}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        if (data.data.length === 0) {
+          list.innerHTML = '<p>No pages found.</p>';
+          return;
         }
-      });
+        list.innerHTML = data.data.map(page => `
+          <div class="page-card" style="justify-content:space-between; cursor:pointer;" onclick="scanThisPage('${page.name}', 'https://www.facebook.com/${page.name}/')">
+            <div style="display:flex; align-items:center; gap:1rem;">
+              <img src="${page.picture.data.url}" alt="${page.name}">
+              <strong>${page.name}</strong>
+            </div>
+            <button class="btn btn-outline btn-sm"><i class="fas fa-search"></i> Scan</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p>Error: ${err.message}</p>`;
+      }
     }
 
     window.scanThisPage = (name, url) => {
@@ -494,8 +502,7 @@
       appId = newAppId;
       appSecret = newAppSecret;
       updateSettingsStatus();
-      showToast('Settings saved! Reloading…', '#42B72A');
-      setTimeout(() => location.reload(), 1500);
+      showToast('Settings saved!', '#42B72A');
     });
 
     document.getElementById('resetSettingsBtn').addEventListener('click', () => {
@@ -522,15 +529,14 @@
       setTimeout(() => t.classList.add('hidden'), 3000);
     }
 
-    // Initial state
-    if (appId && userAccessToken) {
-      document.getElementById('statusBadge').innerHTML = '🟢 Connected';
-      document.getElementById('statusBadge').className = 'status-badge status-connected';
-      document.getElementById('connectBtn').classList.add('hidden');
-      document.getElementById('userInfo').classList.remove('hidden');
-      document.getElementById('userName').textContent = userName || 'User';
+    // ---------- Initial actions ----------
+    // Check if we just came back from Facebook OAuth redirect
+    handleLoginRedirect();
+
+    // If token already stored and valid
+    if (userAccessToken && !userId) {
+      fetchUserProfile();
     }
-    updateSettingsStatus();
   </script>
 </body>
 </html>
