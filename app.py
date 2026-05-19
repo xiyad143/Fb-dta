@@ -1,4 +1,5 @@
 import os, re
+from urllib.parse import urlparse, parse_qs
 from flask import Flask, request, jsonify, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -21,18 +22,38 @@ def classify_url(url: str):
     return None
 
 def scan_page_videos_yt(url: str) -> list:
-    if not url.endswith('/videos'):
-        url = url.rstrip('/') + '/videos'
+    """
+    Scans a Facebook page or profile for public videos using yt-dlp.
+    Handles both page (e.g. /NASA) and profile (e.g. profile.php?id=123) URLs.
+    """
+    parsed = urlparse(url)
+    # ---- Normalize to a video listing URL ----
+    if 'profile.php' in parsed.path:
+        # Extract the numeric ID from query string
+        qs = parse_qs(parsed.query)
+        profile_id = qs.get('id', [None])[0]
+        if not profile_id:
+            raise ValueError("Could not extract profile ID from the URL.")
+        # Build the correct “Videos” tab URL
+        videos_url = f"https://www.facebook.com/profile.php?id={profile_id}&sk=videos"
+    else:
+        # Regular page: simply add /videos if not already present
+        if not url.endswith('/videos'):
+            url = url.rstrip('/') + '/videos'
+        videos_url = url
+
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'extract_flat': True,
+        'extract_flat': True,      # fast, no download
         'skip_download': True,
         'force_generic_extractor': False,
-        'playlistend': 100,
+        'playlistend': 100,        # fetch up to 100 recent videos
     }
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
+        info = ydl.extract_info(videos_url, download=False)
+
     entries = info.get('entries') or []
     videos = []
     for entry in entries:
@@ -61,6 +82,7 @@ def extract_single_video(url: str) -> dict:
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
+
     formats = info.get('formats', [])
     hd_url = sd_url = None
     for fmt in formats:
@@ -78,6 +100,7 @@ def extract_single_video(url: str) -> dict:
         for fmt in formats:
             if fmt.get('format_id') == 'sd' and fmt.get('url'):
                 sd_url = fmt['url']; break
+
     description = info.get('description') or ''
     hashtags = list(set(re.findall(r'#(\w+)', description)))
     return {
@@ -136,3 +159,4 @@ def extract():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+    
