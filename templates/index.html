@@ -65,12 +65,15 @@
     .status-disconnected { background: #fbe3e4; color: #8b0000; }
     body.dark .status-connected { background: #1b3a1b; color: #a3e4a3; }
     body.dark .status-disconnected { background: #3a1c1c; color: #ffb0b0; }
+    .profile-card {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;
+    }
+    .profile-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
     .page-card, .video-card {
       background: var(--card-bg); border-radius: 12px; padding: 1rem; display: flex; align-items: center;
-      gap: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 0.5rem;
-      transition: transform 0.2s;
+      gap: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 0.5rem; transition: transform 0.2s;
     }
-    .page-card:hover { transform: translateY(-2px); }
+    .page-card:hover, .video-card:hover { transform: translateY(-2px); }
     .page-card img, .video-card img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
     .thumbnail-wrap { position:relative; margin-bottom:1rem; }
     .thumbnail-wrap img { width:100%; border-radius:12px; }
@@ -100,8 +103,9 @@
       </div>
     </div>
 
-    <!-- Home / Scanner -->
+    <!-- Home -->
     <div id="homeSection">
+      <!-- Connection card -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
           <div>
@@ -113,38 +117,41 @@
             <button id="connectBtn" class="btn btn-primary"><i class="fab fa-facebook"></i> Connect Facebook</button>
           </div>
         </div>
-        <div id="userInfo" class="hidden" style="margin-top:1rem; display:flex; align-items:center; gap:1rem;">
-          <img id="userPicture" src="" style="width:40px; height:40px; border-radius:50%;">
-          <span><strong id="userName"></strong></span>
-          <button id="logoutBtn" class="btn btn-outline btn-sm" style="margin-left:auto;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <div id="userInfo" class="hidden" style="margin-top:1rem;">
+          <div class="profile-card">
+            <img id="userPicture" src="" alt="Profile picture">
+            <span><strong id="userName"></strong></span>
+          </div>
+          <button id="logoutBtn" class="btn btn-outline btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
       </div>
 
+      <!-- Page Selection (loaded after login) -->
       <div id="pageSelection" class="hidden card">
-        <h3>Select a Page to Scan</h3>
+        <h3>📄 Your Pages (click to scan)</h3>
         <div id="pageListContainer" class="grid-2" style="margin-top:1rem;"></div>
       </div>
 
-      <div id="scanResults" class="hidden card">
-        <h2>📊 Scanned Videos & Reels</h2>
-        <div id="scanSummary" style="margin:1rem 0;"></div>
-        <button id="copyLinksBtn" class="btn btn-outline"><i class="fas fa-copy"></i> Copy All Links</button>
-        <button id="exportCSVBtn" class="btn btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
-        <div id="videoList" style="margin-top:1rem;"></div>
+      <!-- Manual page scan -->
+      <div class="card">
+        <h2>🔍 Scan Any Public Page</h2>
+        <p style="color:var(--text-secondary); margin-bottom:1rem;">Paste a Facebook page URL to list all public videos & reels.</p>
+        <div class="input-group">
+          <input type="text" id="pageUrlInput" placeholder="https://www.facebook.com/NASA">
+          <button id="scanBtn" class="btn btn-primary"><i class="fas fa-search"></i> Scan</button>
+        </div>
+        <div id="scanLoading" class="hidden"><div class="spinner"></div><p style="text-align:center;">Scanning page...</p></div>
       </div>
 
-      <div id="loadingDiv" class="hidden card" style="text-align:center;">
-        <div class="spinner"></div>
-        <p>Loading...</p>
-      </div>
-      <div id="errorDiv" class="hidden card" style="background:var(--error-bg); color:var(--error-text);"></div>
+      <div id="scanError" class="hidden card" style="background:var(--error-bg); color:var(--error-text);"></div>
+      <div id="scanResult" class="hidden card"></div>
     </div>
 
-    <!-- My Pages (mirror of home but with page grid) -->
+    <!-- My Pages section -->
     <div id="pagesSection" class="hidden">
       <div class="card">
         <h2>📄 Your Pages</h2>
-        <p style="color:var(--text-secondary); margin-bottom:1rem;">Select a page to scan its public videos & reels.</p>
+        <p style="color:var(--text-secondary); margin-bottom:1rem;">Click a page to scan its public videos & reels.</p>
         <div id="pagesListFull"></div>
       </div>
     </div>
@@ -181,7 +188,7 @@
   <script>
     // ---------- State ----------
     const APP_ID_KEY = 'fb_app_id';
-    const APP_SECRET_KEY = 'fb_app_secret';
+    const APP_SECRET_KEY = 'fb_app_secret';   // stored but not used for OAuth (only App ID is needed)
     const ACCESS_TOKEN_KEY = 'fb_access_token';
     const USER_ID_KEY = 'fb_user_id';
     const USER_NAME_KEY = 'fb_user_name';
@@ -202,7 +209,7 @@
 
     function updateSettingsStatus() {
       const badge = document.getElementById('settingsStatusBadge');
-      const connected = appId && appSecret;
+      const connected = appId && appSecret;   // both filled = connected
       if (connected) {
         badge.textContent = 'Connected';
         badge.className = 'status-badge status-connected';
@@ -220,11 +227,12 @@
         showToast('Please enter your App ID in Settings first.', '#ff4d4d');
         return;
       }
+      // App Secret is not needed for client-side OAuth
       const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?` +
         `client_id=${appId}` +
         `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
         `&response_type=token` +
-        `&scope=public_profile,pages_show_list,pages_read_engagement`;
+        `&scope=public_profile,pages_show_list`;
       window.location.href = authUrl;
     });
 
@@ -236,16 +244,14 @@
       if (accessToken) {
         userAccessToken = accessToken;
         localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-        // Clear the URL fragment for security
-        window.location.hash = '';
-        // Fetch user info using Graph API
+        window.location.hash = '';  // Clear fragment
         fetchUserProfile();
       }
     }
 
     async function fetchUserProfile() {
       try {
-        const res = await fetch(`https://graph.facebook.com/me?fields=name,picture&access_token=${userAccessToken}`);
+        const res = await fetch(`https://graph.facebook.com/me?fields=name,picture.width(300).height(300)&access_token=${userAccessToken}`);
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
         userName = data.name;
@@ -268,9 +274,8 @@
       clearLoginData();
       updateUI(false);
       showToast('Logged out.', '#1877F2');
-      // Hide page selection and scan results
       document.getElementById('pageSelection').classList.add('hidden');
-      document.getElementById('scanResults').classList.add('hidden');
+      document.getElementById('scanResult').classList.add('hidden');
     });
 
     function clearLoginData() {
@@ -296,7 +301,6 @@
         userInfo.classList.remove('hidden');
         document.getElementById('userName').textContent = userName;
         document.getElementById('userPicture').src = userPicture || '';
-        // Load pages automatically
         loadPages();
       } else {
         statusBadge.innerHTML = '🔴 Not Connected';
@@ -304,88 +308,137 @@
         connectBtn.classList.remove('hidden');
         userInfo.classList.add('hidden');
         pageSelection.classList.add('hidden');
-        document.getElementById('scanResults').classList.add('hidden');
+        document.getElementById('scanResult').classList.add('hidden');
       }
-    }
-
-    // Check for existing token on page load
-    if (userAccessToken && !userId) {
-      fetchUserProfile();
     }
 
     // ---------- Load Pages ----------
     async function loadPages() {
       const container = document.getElementById('pageListContainer');
       const pagesListFull = document.getElementById('pagesListFull');
-      container.innerHTML = '<p>Loading pages...</p>';
-      if (pagesListFull) pagesListFull.innerHTML = '<p>Loading pages...</p>';
+      const loadingText = '<p>Loading pages...</p>';
+      if (container) container.innerHTML = loadingText;
+      if (pagesListFull) pagesListFull.innerHTML = loadingText;
       try {
         const res = await fetch(`https://graph.facebook.com/me/accounts?fields=name,picture,fan_count&access_token=${userAccessToken}`);
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
         const pages = data.data || [];
         if (pages.length === 0) {
-          container.innerHTML = '<p>No pages found.</p>';
-          if (pagesListFull) pagesListFull.innerHTML = '<p>No pages found.</p>';
+          const msg = '<p>No pages found.</p>';
+          if (container) container.innerHTML = msg;
+          if (pagesListFull) pagesListFull.innerHTML = msg;
           return;
         }
         const pageCardsHtml = pages.map(page => `
-          <div class="page-card" style="cursor:pointer;" onclick="selectPage('${page.name}', '${page.id}', '${page.access_token}')">
+          <div class="page-card" style="cursor:pointer;" onclick="selectPage('${page.name}', '${page.access_token}')">
             <img src="${page.picture.data.url}" alt="${page.name}">
             <div>
               <strong>${page.name}</strong>
-              <div style="font-size:0.85rem; color:var(--text-secondary);">${page.fan_count ? page.fan_count.toLocaleString() + ' followers' : ''}</div>
+              <div style="font-size:0.85rem; color:var(--text-secondary);">
+                ${page.fan_count ? page.fan_count.toLocaleString() + ' followers' : ''}
+              </div>
             </div>
             <i class="fas fa-chevron-right" style="margin-left:auto;"></i>
           </div>
         `).join('');
-        container.innerHTML = pageCardsHtml;
+        if (container) container.innerHTML = pageCardsHtml;
         if (pagesListFull) pagesListFull.innerHTML = pageCardsHtml;
         document.getElementById('pageSelection').classList.remove('hidden');
       } catch (err) {
-        container.innerHTML = `<p class="error">Error: ${err.message}</p>`;
-        if (pagesListFull) pagesListFull.innerHTML = `<p class="error">Error: ${err.message}</p>`;
+        const msg = `<p style="color:var(--error-text);">Error: ${err.message}</p>`;
+        if (container) container.innerHTML = msg;
+        if (pagesListFull) pagesListFull.innerHTML = msg;
       }
     }
 
-    window.selectPage = async (pageName, pageId, pageAccessToken) => {
-      showToast(`Fetching videos from ${pageName}...`, '#1877F2');
-      document.getElementById('scanResults').classList.add('hidden');
-      document.getElementById('loadingDiv').classList.remove('hidden');
-      document.getElementById('errorDiv').classList.add('hidden');
-      try {
-        // Fetch videos and reels via Graph API
-        const videoFields = 'id,title,description,created_time,thumbnails,source,length';
-        const res = await fetch(`https://graph.facebook.com/${pageId}/videos?fields=${videoFields}&access_token=${pageAccessToken}`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        const videos = data.data || [];
-        // Also fetch reels? Actually Graph API `/videos` includes reels as well.
-        displayScanResults(pageName, videos, pageAccessToken);
-      } catch (err) {
-        document.getElementById('errorDiv').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${err.message}`;
-        document.getElementById('errorDiv').classList.remove('hidden');
-      } finally {
-        document.getElementById('loadingDiv').classList.add('hidden');
-      }
+    // ---------- Select a page to scan (Graph API) ----------
+    window.selectPage = (pageName, pageAccessToken) => {
+      document.getElementById('scanResult').classList.add('hidden');
+      document.getElementById('scanLoading').classList.remove('hidden');
+      document.getElementById('scanError').classList.add('hidden');
+      fetchPageVideosViaGraph(pageName, pageAccessToken);
     };
 
-    function displayScanResults(pageName, videos, pageAccessToken) {
+    async function fetchPageVideosViaGraph(pageName, pageAccessToken) {
+      try {
+        const accRes = await fetch(`https://graph.facebook.com/me/accounts?access_token=${userAccessToken}`);
+        const accData = await accRes.json();
+        const page = accData.data?.find(p => p.access_token === pageAccessToken);
+        const pageId = page?.id;
+        if (!pageId) throw new Error('Could not determine page ID.');
+
+        const videoFields = 'id,title,description,created_time,thumbnails,source,length';
+        const videoRes = await fetch(`https://graph.facebook.com/${pageId}/videos?fields=${videoFields}&access_token=${pageAccessToken}`);
+        const videoData = await videoRes.json();
+        if (videoData.error) throw new Error(videoData.error.message);
+        const videos = videoData.data || [];
+        displayScanResults(pageName, videos);
+      } catch (err) {
+        document.getElementById('scanError').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${err.message}`;
+        document.getElementById('scanError').classList.remove('hidden');
+      } finally {
+        document.getElementById('scanLoading').classList.add('hidden');
+      }
+    }
+
+    // ---------- Manual page scan (uses yt-dlp backend) ----------
+    const scanBtn = document.getElementById('scanBtn');
+    const pageUrlInput = document.getElementById('pageUrlInput');
+    const scanLoadingDiv = document.getElementById('scanLoading');
+    const scanErrorDiv = document.getElementById('scanError');
+    const scanResultDiv = document.getElementById('scanResult');
+
+    scanBtn.addEventListener('click', manualScan);
+    pageUrlInput.addEventListener('keypress', e => { if (e.key === 'Enter') manualScan(); });
+
+    async function manualScan() {
+      const url = pageUrlInput.value.trim();
+      if (!url) return;
+      scanResultDiv.classList.add('hidden');
+      scanErrorDiv.classList.add('hidden');
+      scanLoadingDiv.classList.remove('hidden');
+      try {
+        const res = await fetch('/api/scan-page', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Scan failed');
+        displayScanResults(url, data.videos || []);
+      } catch (err) {
+        scanErrorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${err.message}`;
+        scanErrorDiv.classList.remove('hidden');
+      } finally {
+        scanLoadingDiv.classList.add('hidden');
+      }
+    }
+
+    // ---------- Display scan results (common) ----------
+    function displayScanResults(name, videos) {
       const totalVids = videos.length;
-      const reels = videos.filter(v => v.source && v.source.includes('/reel/')); // crude detection
+      const reels = videos.filter(v => v.is_reel !== undefined ? v.is_reel : false);
       const totalReels = reels.length;
-      const summary = document.getElementById('scanSummary');
-      summary.innerHTML = `
-        <strong>${pageName}</strong><br>
-        Total Videos: ${totalVids} · Reels: ${totalReels}
-      `;
+      let summaryHtml = `<strong>${name}</strong><br>Total Videos: ${totalVids} · Reels: ${totalReels}`;
+      const existingSummary = document.getElementById('scanSummary');
+      if (existingSummary) existingSummary.innerHTML = summaryHtml;
+      else {
+        const h2 = scanResultDiv.querySelector('h2');
+        const div = document.createElement('div');
+        div.id = 'scanSummary';
+        div.innerHTML = summaryHtml;
+        h2.after(div);
+      }
 
       const videoListDiv = document.getElementById('videoList');
       videoListDiv.innerHTML = videos.map(v => {
-        const thumb = v.thumbnails?.data[0]?.uri || 'https://via.placeholder.com/320x180?text=No+Thumbnail';
+        const thumb = v.thumbnails?.data[0]?.uri || v.thumbnail || 'https://via.placeholder.com/320x180?text=No+Thumbnail';
         const title = v.title || 'Untitled';
-        const uploadDate = v.created_time ? new Date(v.created_time).toLocaleDateString() : 'N/A';
-        const videoUrl = `https://www.facebook.com/watch?v=${v.id}`; // fallback URL
+        const uploadDate = v.created_time ? new Date(v.created_time).toLocaleDateString() : (v.upload_date || 'N/A');
+        const videoUrl = v.url || `https://www.facebook.com/watch?v=${v.id}`;
+        const minutes = Math.floor(v.duration / 60);
+        const seconds = Math.floor(v.duration % 60).toString().padStart(2, '0');
         return `
           <div class="video-card" style="justify-content:space-between; flex-wrap:wrap;">
             <div style="display:flex; gap:1rem; align-items:center;">
@@ -393,7 +446,7 @@
               <div>
                 <strong>${title}</strong>
                 <div style="font-size:0.85rem; color:var(--text-secondary);">
-                  ${uploadDate} · ${v.length ? Math.floor(v.length/60)+':'+(v.length%60).toString().padStart(2,'0') : 'N/A'}
+                  ${uploadDate} · ${v.duration ? `${minutes}:${seconds}` : 'N/A'}
                 </div>
               </div>
             </div>
@@ -401,20 +454,19 @@
               <button class="btn btn-primary btn-sm" onclick="downloadVideo('${videoUrl}')"><i class="fas fa-download"></i></button>
               <button class="btn btn-outline btn-sm" onclick="copyText('${videoUrl}')"><i class="fas fa-copy"></i></button>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
 
       document.getElementById('copyLinksBtn').onclick = () => {
-        const allLinks = videos.map(v => `https://www.facebook.com/watch?v=${v.id}`).join('\n');
+        const allLinks = videos.map(v => v.url || `https://www.facebook.com/watch?v=${v.id}`).join('\n');
         copyText(allLinks);
       };
       document.getElementById('exportCSVBtn').onclick = () => exportCSV(videos);
 
-      document.getElementById('scanResults').classList.remove('hidden');
+      scanResultDiv.classList.remove('hidden');
     }
 
-    // Download video (calls backend for extraction)
+    // ---------- Download single video ----------
     window.downloadVideo = async (videoUrl) => {
       showToast('Extracting video...', '#1877F2');
       try {
@@ -463,9 +515,10 @@
     };
 
     function exportCSV(videos) {
-      let csv = 'Title,URL,Upload Date,Length (seconds)\n';
+      let csv = 'Title,URL,Upload Date,Duration (seconds)\n';
       videos.forEach(v => {
-        csv += `"${v.title?.replace(/"/g,'""') || ''}",https://www.facebook.com/watch?v=${v.id},"${v.created_time}",${v.length || 0}\n`;
+        const url = v.url || `https://www.facebook.com/watch?v=${v.id}`;
+        csv += `"${v.title?.replace(/"/g,'""') || ''}",${url},${v.created_time || ''},${v.duration || 0}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -491,7 +544,7 @@
       Object.values(navButtons).forEach(b => b.classList.remove('active'));
       navButtons[name].classList.add('active');
       if (name === 'pages' && userAccessToken) {
-        loadPages(); // Ensure pages list is fresh
+        loadPages();
       }
     }
 
