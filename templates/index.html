@@ -1,35 +1,46 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>XIYAD FACEBOOK Media Pro | Complete Dashboard</title>
-    <!-- Font Awesome 6, Chart.js, GSAP -->
+    <title>XIYAD FACEBOOK Media Pro | Professional Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
         body {
             background: radial-gradient(circle at 10% 30%, #eef2ff, #e2e8f0);
             transition: all 0.3s ease;
+            padding: 1.5rem;
         }
+
         body.dark {
             background: radial-gradient(circle at 10% 30%, #0a0c10, #030507);
             color: #eef2ff;
         }
-        /* Glassmorphism core */
+
+        /* Glassmorphism Core */
         .glass-card {
             background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(14px);
             border-radius: 2rem;
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             transition: all 0.2s;
         }
+
         body.dark .glass-card {
             background: rgba(20, 25, 35, 0.6);
-            border-color: rgba(255,255,255,0.05);
+            border-color: rgba(255, 255, 255, 0.05);
         }
+
         .btn-premium {
             background: linear-gradient(135deg, #1877f2, #0b5ed7);
             border: none;
@@ -39,50 +50,129 @@
             padding: 0.6rem 1.4rem;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(24,119,242,0.3);
+            box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3);
         }
-        .btn-premium:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
         .input-xiya {
-            background: rgba(255,255,255,0.85);
+            background: rgba(255, 255, 255, 0.85);
             border-radius: 2rem;
             padding: 0.8rem 1.2rem;
             border: none;
             outline: none;
             width: 100%;
-            transition: 0.2s;
         }
-        body.dark .input-xiya { background: #1e293b; color: white; }
-        .badge-neon { background: #1877f2; box-shadow: 0 0 6px #1877f2; border-radius: 40px; padding: 4px 12px; font-size: 0.7rem; }
-        .toast-notify {
-            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-            background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px;
-            backdrop-filter: blur(8px); font-weight: 500; box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+
+        body.dark .input-xiya {
+            background: #1e293b;
+            color: white;
         }
+
         .media-card {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(4px);
             border-radius: 1.5rem;
             overflow: hidden;
             transition: all 0.2s;
-            border: 1px solid rgba(255,255,255,0.4);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            cursor: pointer;
         }
-        body.dark .media-card { background: #1f2937; border-color: #374151; }
-        .media-card:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.3); }
-        .loader { border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top: 3px solid #1877f2; width: 32px; height: 32px; animation: spin 0.7s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        body.dark .media-card {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .media-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast-notify {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            backdrop-filter: blur(8px);
+            font-weight: 500;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+        }
+
+        .loader {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #1877f2;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .modal-glass {
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(10px);
-            transition: 0.2s;
         }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #ccc; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #1877f2; border-radius: 10px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-        .activity-item { font-size: 0.8rem; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 6px 0; }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-item {
+            cursor: pointer;
+            transition: 0.1s;
+            border-left: 4px solid transparent;
+        }
+
+        .page-item.active {
+            border-left-color: #1877f2;
+            background: rgba(24, 119, 242, 0.1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1877f2;
+            border-radius: 10px;
+        }
+
+        .badge-neon {
+            background: rgba(24, 119, 242, 0.2);
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+        }
+
+        .max-w-7xl {
+            max-width: 80rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
-<body class="p-5 md:p-8">
+<body>
     <div class="max-w-7xl mx-auto relative">
         <!-- Header -->
         <div class="flex-between mb-8">
@@ -92,11 +182,11 @@
             </div>
             <div class="flex gap-3">
                 <button id="themeToggleBtn" class="glass-card w-10 h-10 rounded-full flex items-center justify-center"><i class="fas fa-moon"></i></button>
-                <button id="resetFullBtn" class="btn-premium !bg-red-500/80 !shadow-none"><i class="fas fa-trash-alt"></i> Reset All</button>
+                <button id="resetAllBtn" class="btn-premium !bg-red-500/80"><i class="fas fa-trash-alt"></i> Reset All</button>
             </div>
         </div>
 
-        <!-- SETTINGS: App ID + Secret Manual Input -->
+        <!-- Settings Panel -->
         <div class="glass-card p-5 mb-6">
             <h2 class="text-xl font-bold mb-3"><i class="fas fa-sliders-h"></i> Settings & Authentication</h2>
             <div class="grid md:grid-cols-2 gap-4">
@@ -111,12 +201,15 @@
 
         <!-- Token Manager & Profile -->
         <div class="glass-card p-5 mb-6">
-            <div class="flex-between"><h2 class="text-xl font-bold"><i class="fas fa-key"></i> Token Manager & Profile</h2><button id="addAccountBtn" class="btn-premium !py-1"><i class="fas fa-user-plus"></i> Multi‑Account</button></div>
+            <div class="flex-between">
+                <h2 class="text-xl font-bold"><i class="fas fa-key"></i> Token Manager</h2>
+                <button id="addAccountBtn" class="btn-premium !py-1"><i class="fas fa-user-plus"></i> Multi-Account</button>
+            </div>
             <div class="grid md:grid-cols-2 gap-4 mt-3">
                 <div><label>User Access Token</label><input id="userTokenInput" class="input-xiya" placeholder="Paste token or get from connect"></div>
                 <div class="flex items-end gap-2"><button id="checkTokenBtn" class="btn-premium w-full"><i class="fas fa-stethoscope"></i> Verify Token</button></div>
             </div>
-            <div id="tokenStatusDiv" class="text-xs mt-2 flex gap-3 flex-wrap"><span class="token-badge">⚡ Token status: idle</span></div>
+            <div id="tokenStatusDiv" class="text-xs mt-2 flex gap-3 flex-wrap"><span class="badge-neon">⚡ Status: idle</span></div>
             <div id="multiAccountList" class="flex flex-wrap gap-2 mt-3"></div>
             <div class="flex gap-4 items-center mt-4 border-t pt-3">
                 <div id="profilePic" class="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center"><i class="fas fa-user-circle text-2xl"></i></div>
@@ -127,46 +220,45 @@
 
         <!-- Pages Manager -->
         <div class="glass-card p-5 mb-6">
-            <h2 class="text-xl font-bold mb-2"><i class="fas fa-th-large"></i> Your Managed Pages</h2>
+            <h2 class="text-xl font-bold mb-3"><i class="fas fa-th-large"></i> Your Managed Pages</h2>
             <div id="pagesContainer" class="flex flex-wrap gap-3 max-h-48 overflow-y-auto"></div>
             <div id="activePageInfo" class="text-sm text-blue-400 mt-2"></div>
         </div>
 
-        <!-- Stats Dashboard Cards -->
+        <!-- Stats Dashboard -->
         <div class="grid lg:grid-cols-4 gap-4 mb-6">
             <div class="glass-card p-4 text-center"><i class="fas fa-video text-2xl text-blue-400"></i><h3 class="text-2xl font-bold" id="totalVideos">0</h3><p>Total Videos/Reels</p></div>
             <div class="glass-card p-4 text-center"><i class="fas fa-chart-line text-2xl text-green-400"></i><h3 class="text-2xl font-bold" id="totalViews">0</h3><p>Total Views</p></div>
             <div class="glass-card p-4 text-center"><i class="fas fa-calendar-day text-2xl text-purple-400"></i><h3 class="text-2xl font-bold" id="uploadsToday">0</h3><p>Uploads Today</p></div>
-            <div class="glass-card p-4 text-center"><i class="fas fa-rocket text-2xl text-pink-400"></i><h3 class="text-2xl font-bold" id="apiHits">0</h3><p>API Calls</p></div>
+            <div class="glass-card p-4 text-center"><i class="fas fa-rocket text-2xl text-pink-400"></i><h3 class="text-2xl font-bold" id="apiCalls">0</h3><p>API Calls</p></div>
         </div>
 
-        <!-- Graph System (Chart.js) + Activity Feed -->
+        <!-- Chart & Activity Feed -->
         <div class="grid lg:grid-cols-2 gap-6 mb-6">
             <div class="glass-card p-5">
-                <h3 class="font-bold text-lg mb-2"><i class="fas fa-chart-line"></i> Graph Analytics: Uploads per day (last 7 days)</h3>
-                <canvas id="uploadChart" width="400" height="200" style="max-height: 250px;"></canvas>
+                <canvas id="uploadChart" height="200"></canvas>
             </div>
             <div class="glass-card p-5">
-                <div class="flex-between"><h3 class="font-bold text-lg"><i class="fas fa-list-alt"></i> Activity Timeline</h3><button id="clearActivityBtn" class="text-xs text-gray-500">Clear</button></div>
-                <div id="activityFeed" class="h-48 overflow-y-auto mt-2 text-sm space-y-1"></div>
+                <div class="flex-between"><h3 class="font-bold">Activity Timeline</h3><button id="clearActivityBtn" class="text-xs text-gray-500">Clear</button></div>
+                <div id="activityFeed" class="h-48 overflow-y-auto text-sm mt-2 space-y-1"></div>
             </div>
         </div>
 
-        <!-- AI Caption & Bulk Publisher Tools -->
+        <!-- AI Caption & Bulk Publisher -->
         <div class="glass-card p-5 mb-6 flex flex-wrap gap-4 justify-between items-center">
-            <div class="flex gap-2 items-center"><i class="fas fa-robot text-xl"></i> <strong>AI Caption:</strong> <select id="aiStyleSelect" class="rounded-full px-3 py-1"><option value="viral">🔥 Viral</option><option value="business">💼 Business</option><option value="funny">😂 Funny</option><option value="motivation">💪 Motivation</option></select><button id="genCaptionBtn" class="btn-premium">✨ Generate & Copy</button></div>
+            <div class="flex gap-2 items-center"><i class="fas fa-robot text-xl"></i> <strong>AI Caption:</strong> <select id="aiStyleSelect" class="rounded-full px-3 py-1 bg-white dark:bg-gray-800"><option value="viral">🔥 Viral</option><option value="business">💼 Business</option><option value="funny">😂 Funny</option><option value="motivation">💪 Motivation</option></select><button id="genCaptionBtn" class="btn-premium">✨ Generate & Copy</button></div>
             <div><button id="openBulkModal" class="btn-premium"><i class="fas fa-layer-group"></i> Bulk Reel Publisher</button></div>
             <div><button id="exportCSVBtn" class="btn-premium !bg-emerald-600"><i class="fas fa-download"></i> Export CSV</button></div>
         </div>
 
-        <!-- Search & Filter Bar -->
+        <!-- Search & Filter -->
         <div class="glass-card p-4 mb-6 flex flex-wrap gap-3 items-center">
             <input id="searchInput" class="input-xiya flex-1" placeholder="🔍 Search by title, hashtag...">
             <select id="filterType" class="rounded-full px-4 py-2 bg-white dark:bg-gray-800"><option value="all">All Media</option><option value="reel">Reels Only</option><option value="video">Videos Only</option></select>
             <select id="sortOrder" class="rounded-full px-4 py-2"><option value="date">Newest First</option><option value="views">Most Viewed</option></select>
         </div>
 
-        <!-- Media Gallery (Videos & Reels) -->
+        <!-- Media Gallery -->
         <div class="glass-card p-5">
             <div class="flex-between"><h2 class="text-xl font-bold"><i class="fab fa-facebook"></i> Media Library</h2><button id="loadMoreBtn" class="btn-premium hidden">Load More ⬇️</button></div>
             <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-5 max-h-[600px] overflow-y-auto p-1"></div>
@@ -177,7 +269,7 @@
     <div id="bulkModal" class="fixed inset-0 modal-glass hidden items-center justify-center z-50">
         <div class="glass-card w-full max-w-2xl p-6 rounded-3xl">
             <div class="flex-between"><h2 class="text-xl font-bold"><i class="fab fa-facebook"></i> Bulk Reel Publisher</h2><i id="closeBulk" class="fas fa-times text-2xl cursor-pointer"></i></div>
-            <div class="border-dashed border-2 rounded-2xl p-4 mt-3 text-center"><input type="file" id="bulkFileInput" multiple accept="video/mp4,video/quicktime,video/webm"><p class="text-sm">Select multiple MP4 videos</p></div>
+            <div class="border-dashed border-2 rounded-2xl p-4 mt-3 text-center"><input type="file" id="bulkFileInput" multiple accept="video/mp4,video/quicktime"><p class="text-sm">Select multiple MP4 videos</p></div>
             <div id="queueList" class="max-h-48 overflow-y-auto text-sm my-3"></div>
             <button id="startBulkUpload" class="btn-premium w-full">Start Publishing Queue</button>
             <div id="bulkProgress" class="text-sm mt-2"></div>
@@ -186,7 +278,11 @@
 
     <!-- Video Preview Modal -->
     <div id="previewModal" class="fixed inset-0 modal-glass hidden items-center justify-center z-50">
-        <div class="glass-card max-w-3xl w-full p-4"><div class="flex justify-end"><i id="closePreview" class="fas fa-times cursor-pointer text-2xl"></i></div><video id="previewVideo" controls class="w-full rounded-2xl" autoplay></video><div id="previewInfo" class="mt-2 text-sm"></div></div>
+        <div class="glass-card max-w-3xl w-full p-4">
+            <div class="flex justify-end"><i id="closePreview" class="fas fa-times cursor-pointer text-2xl"></i></div>
+            <video id="previewVideo" controls class="w-full rounded-2xl" autoplay></video>
+            <div id="previewInfo" class="mt-2 text-sm"></div>
+        </div>
     </div>
 
     <script>
@@ -199,7 +295,7 @@
         const checkTokenBtn = document.getElementById('checkTokenBtn');
         const addAccountBtn = document.getElementById('addAccountBtn');
         const refreshPagesBtn = document.getElementById('refreshPagesBtn');
-        const resetBtn = document.getElementById('resetFullBtn');
+        const resetBtn = document.getElementById('resetAllBtn');
         const themeToggle = document.getElementById('themeToggleBtn');
         const exportBtn = document.getElementById('exportCSVBtn');
         const genCaptionBtn = document.getElementById('genCaptionBtn');
@@ -216,7 +312,7 @@
         const totalVideosSpan = document.getElementById('totalVideos');
         const totalViewsSpan = document.getElementById('totalViews');
         const uploadsTodaySpan = document.getElementById('uploadsToday');
-        const apiHitsSpan = document.getElementById('apiHits');
+        const apiCallsSpan = document.getElementById('apiCalls');
         const tokenStatusDiv = document.getElementById('tokenStatusDiv');
         const activityFeedDiv = document.getElementById('activityFeed');
         const clearActivityBtn = document.getElementById('clearActivityBtn');
@@ -225,102 +321,191 @@
         const fbIdSpan = document.getElementById('fbId');
         const activePageInfo = document.getElementById('activePageInfo');
 
-        // Global State
+        // Global state
         let currentPageId = null, currentPageToken = null;
         let allMedia = [];
         let nextCursor = null;
-        let apiCallCount = 0;
-        let activeAccounts = [];
-        let activityLog = [];
         let chartInstance = null;
+        let activityLog = [];
+        let activeAccounts = [];
+        let apiCallCount = 0;
 
-        // Helper: Toast & Activity
-        function showToast(msg, type = 'info') { let toast = document.createElement('div'); toast.className = 'toast-notify'; toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
-        function addActivity(msg, type = 'info') { activityLog.unshift({ msg, time: new Date().toLocaleTimeString(), type }); if (activityLog.length > 30) activityLog.pop(); renderActivity(); }
-        function renderActivity() { activityFeedDiv.innerHTML = activityLog.map(log => `<div class="activity-item"><span class="text-xs opacity-50">${log.time}</span> ${log.msg}</div>`).join(''); }
-        clearActivityBtn.onclick = () => { activityLog = []; renderActivity(); };
-        function addApiCall() { apiCallCount++; localStorage.setItem('api_calls', apiCallCount); apiHitsSpan.innerText = apiCallCount; }
-
-        // Token Health Check
-        async function checkTokenHealth(token) {
-            if (!token) { tokenStatusDiv.innerHTML = '<span class="token-badge">❌ No token</span>'; return false; }
-            tokenStatusDiv.innerHTML = '<span class="token-badge">⏳ Verifying...</span>';
-            try {
-                const res = await fetch(`https://graph.facebook.com/me?fields=id,name&access_token=${token}`);
-                addApiCall();
-                const data = await res.json();
-                if (data.id) { tokenStatusDiv.innerHTML = `<span class="token-badge text-green-400">✅ Valid (${data.name})</span>`; return true; }
-                else { tokenStatusDiv.innerHTML = `<span class="token-badge text-red-400">⚠️ Invalid: ${data.error?.message || 'unknown'}</span>`; return false; }
-            } catch (e) { tokenStatusDiv.innerHTML = '<span class="token-badge">⚠️ Network error</span>'; return false; }
+        // Helper: Show toast notification
+        function showToast(msg, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notify';
+            toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
-        checkTokenBtn.onclick = () => checkTokenHealth(userTokenInput.value);
 
-        // Multi Account Management
+        function addActivity(msg) {
+            activityLog.unshift({ msg, time: new Date().toLocaleTimeString() });
+            if (activityLog.length > 30) activityLog.pop();
+            renderActivity();
+        }
+
+        function renderActivity() {
+            activityFeedDiv.innerHTML = activityLog.map(log => `<div class="border-b pb-1"><span class="text-xs opacity-50">${log.time}</span> ${log.msg}</div>`).join('');
+        }
+        clearActivityBtn.onclick = () => { activityLog = []; renderActivity(); };
+
+        // API request helper (calls backend endpoints)
+        async function apiRequest(endpoint, options = {}) {
+            const token = userTokenInput.value;
+            const headers = { 'Authorization': `Bearer ${token}`, ...options.headers };
+            const res = await fetch(endpoint, { ...options, headers });
+            if (!res.ok) throw new Error(await res.text());
+            apiCallCount++;
+            apiCallsSpan.innerText = apiCallCount;
+            return res.json();
+        }
+
+        // Token health check
+        async function checkTokenHealth() {
+            const token = userTokenInput.value;
+            if (!token) { tokenStatusDiv.innerHTML = '<span class="badge-neon bg-red-500/20">❌ No token</span>'; return false; }
+            tokenStatusDiv.innerHTML = '<span class="badge-neon">⏳ Verifying...</span>';
+            try {
+                const data = await apiRequest('/api/me');
+                tokenStatusDiv.innerHTML = `<span class="badge-neon bg-green-500/20">✅ Valid (${data.name})</span>`;
+                return true;
+            } catch (e) {
+                tokenStatusDiv.innerHTML = '<span class="badge-neon bg-red-500/20">⚠️ Invalid token</span>';
+                return false;
+            }
+        }
+        checkTokenBtn.onclick = checkTokenHealth;
+
+        // Multi-account management
         function renderMultiAccounts() {
             const container = document.getElementById('multiAccountList');
-            container.innerHTML = activeAccounts.map((acc, idx) => `<div class="glass-card px-3 py-1 flex gap-2 items-center"><i class="fas fa-user-circle"></i>${acc.name}<button class="text-xs text-blue-400 switchAccBtn" data-token="${acc.token}">Switch</button><button class="text-xs text-red-400 removeAccBtn" data-idx="${idx}">x</button></div>`).join('');
-            document.querySelectorAll('.switchAccBtn').forEach(btn => btn.addEventListener('click', () => { userTokenInput.value = btn.dataset.token; localStorage.setItem('fb_active_token', btn.dataset.token); checkTokenHealth(btn.dataset.token); fetchProfile(btn.dataset.token); fetchUserPages(btn.dataset.token); addActivity(`Switched to account`); }));
-            document.querySelectorAll('.removeAccBtn').forEach(btn => btn.addEventListener('click', () => { activeAccounts.splice(btn.dataset.idx, 1); localStorage.setItem('xiya_accounts', JSON.stringify(activeAccounts)); renderMultiAccounts(); }));
+            container.innerHTML = activeAccounts.map((acc, idx) => `
+                <div class="glass-card px-3 py-1 flex gap-2 items-center">
+                    <i class="fas fa-user-circle"></i>${acc.name}
+                    <button class="text-xs text-blue-400 switchAccBtn" data-token="${acc.token}">Switch</button>
+                    <button class="text-xs text-red-400 removeAccBtn" data-idx="${idx}">x</button>
+                </div>`).join('');
+            document.querySelectorAll('.switchAccBtn').forEach(btn => btn.addEventListener('click', () => {
+                userTokenInput.value = btn.dataset.token;
+                localStorage.setItem('fb_active_token', btn.dataset.token);
+                checkTokenHealth();
+                fetchProfileAndPages();
+                showToast(`Switched to account`);
+            }));
+            document.querySelectorAll('.removeAccBtn').forEach(btn => btn.addEventListener('click', () => {
+                activeAccounts.splice(btn.dataset.idx, 1);
+                localStorage.setItem('xiya_accounts', JSON.stringify(activeAccounts));
+                renderMultiAccounts();
+            }));
         }
-        addAccountBtn.onclick = () => { let name = prompt('Account nickname'); let tok = prompt('Enter Access Token'); if (tok && name) { activeAccounts.push({ name, token: tok }); localStorage.setItem('xiya_accounts', JSON.stringify(activeAccounts)); renderMultiAccounts(); addActivity(`Added account: ${name}`); } };
+        addAccountBtn.onclick = () => {
+            const name = prompt('Account nickname');
+            const tok = prompt('Enter Access Token');
+            if (tok && name) {
+                activeAccounts.push({ name, token: tok });
+                localStorage.setItem('xiya_accounts', JSON.stringify(activeAccounts));
+                renderMultiAccounts();
+                addActivity(`Added account: ${name}`);
+            }
+        };
 
-        // Facebook OAuth using manual App ID
+        // Facebook OAuth login using manual App ID
         function fbLoginWithApp() {
             const appId = appIdInput.value.trim();
             if (!appId) { showToast('Please enter App ID in settings', 'error'); return; }
             if (window.FB) { FB.init({ appId, version: 'v19.0' }); doLogin(); return; }
             window.fbAsyncInit = function () { FB.init({ appId, version: 'v19.0' }); doLogin(); };
-            if (!document.getElementById('fb-sdk')) { let js = document.createElement('script'); js.id = 'fb-sdk'; js.src = 'https://connect.facebook.net/en_US/sdk.js'; document.head.append(js); }
-            else doLogin();
-            function doLogin() { FB.login(res => { if (res.authResponse) { const token = res.authResponse.accessToken; localStorage.setItem('fb_active_token', token); userTokenInput.value = token; checkTokenHealth(token); fetchProfile(token); fetchUserPages(token); addActivity('Facebook login success'); showToast('Connected to Facebook'); } else showToast('Login failed', 'error'); }, { scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts' }); }
+            if (!document.getElementById('fb-sdk')) {
+                const js = document.createElement('script');
+                js.id = 'fb-sdk';
+                js.src = 'https://connect.facebook.net/en_US/sdk.js';
+                document.head.append(js);
+            } else doLogin();
+            function doLogin() {
+                FB.login(res => {
+                    if (res.authResponse) {
+                        const token = res.authResponse.accessToken;
+                        userTokenInput.value = token;
+                        localStorage.setItem('fb_active_token', token);
+                        checkTokenHealth();
+                        fetchProfileAndPages();
+                        addActivity('Facebook login success');
+                        showToast('Connected to Facebook');
+                    } else showToast('Login failed', 'error');
+                }, { scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts' });
+            }
         }
         connectBtn.onclick = fbLoginWithApp;
-        saveCredBtn.onclick = () => { localStorage.setItem('fb_app_id', appIdInput.value); localStorage.setItem('fb_app_secret', appSecretInput.value); showToast('App credentials saved'); addActivity('App ID/Secret saved'); };
+        saveCredBtn.onclick = () => {
+            localStorage.setItem('fb_app_id', appIdInput.value);
+            localStorage.setItem('fb_app_secret', appSecretInput.value);
+            showToast('Credentials saved');
+            addActivity('App ID/Secret saved');
+        };
 
-        // Profile & Pages
-        async function fetchProfile(token) {
+        // Fetch profile & pages
+        async function fetchProfileAndPages() {
+            const token = userTokenInput.value;
             if (!token) return;
             try {
-                const res = await fetch(`https://graph.facebook.com/me?fields=name,id,picture.width(150)&access_token=${token}`);
-                addApiCall();
-                const data = await res.json();
-                if (data.name) { profileNameSpan.innerText = data.name; fbIdSpan.innerText = data.id; if (data.picture) profilePicDiv.innerHTML = `<img src="${data.picture.data.url}" class="w-full h-full object-cover">`; }
-            } catch (e) { addActivity('Profile fetch error', 'error'); }
+                const profile = await apiRequest('/api/me');
+                profileNameSpan.innerText = profile.name;
+                fbIdSpan.innerText = profile.id;
+                if (profile.picture) profilePicDiv.innerHTML = `<img src="${profile.picture.data.url}" class="w-full h-full object-cover">`;
+                const pagesData = await apiRequest('/api/pages');
+                const pages = pagesData.data || [];
+                if (!pages.length) pagesDiv.innerHTML = '<div class="text-sm">No managed pages (need admin rights)</div>';
+                else pagesDiv.innerHTML = pages.map(p => `
+                    <div class="glass-card p-2 flex gap-3 items-center cursor-pointer pageItem" data-pageid="${p.id}" data-pagetoken="${p.access_token}">
+                        <img src="${p.picture?.data?.url || 'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full">
+                        <div><b>${p.name}</b><div class="text-xs">📈 followers: ${p.followers_count || 0}</div></div>
+                    </div>`).join('');
+                document.querySelectorAll('.pageItem').forEach(el => {
+                    el.addEventListener('click', () => {
+                        currentPageId = el.dataset.pageid;
+                        currentPageToken = el.dataset.pagetoken;
+                        activePageInfo.innerText = `✅ Active: ${el.querySelector('b')?.innerText}`;
+                        fetchPageVideos(true);
+                        addActivity(`Selected page: ${el.querySelector('b')?.innerText}`);
+                    });
+                });
+            } catch (e) {
+                showToast('Failed to load profile/pages', 'error');
+                addActivity(`Error: ${e.message}`);
+            }
         }
-        async function fetchUserPages(token) {
-            if (!token) return;
-            const res = await fetch(`https://graph.facebook.com/me/accounts?fields=name,picture,followers_count,access_token,id&access_token=${token}`);
-            addApiCall();
-            const json = await res.json();
-            const pages = json.data || [];
-            if (!pages.length) pagesDiv.innerHTML = '<div class="text-sm">No pages managed (need admin rights)</div>';
-            else pagesDiv.innerHTML = pages.map(p => `<div class="glass-card p-2 flex gap-3 items-center cursor-pointer pageItem" data-pageid="${p.id}" data-pagetoken="${p.access_token}"><img src="${p.picture?.data?.url || 'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full"><div><b>${p.name}</b><div class="text-xs">📈 followers: ${p.followers_count || 0}</div></div></div>`).join('');
-            document.querySelectorAll('.pageItem').forEach(el => { el.addEventListener('click', () => { currentPageId = el.dataset.pageid; currentPageToken = el.dataset.pagetoken; activePageInfo.innerText = `✅ Active: ${el.querySelector('b')?.innerText}`; fetchPageVideos(currentPageId, currentPageToken, true); addActivity(`Selected page: ${el.querySelector('b')?.innerText}`); }); });
-        }
-        refreshPagesBtn.onclick = () => { const token = userTokenInput.value; if (token) { fetchUserPages(token); fetchProfile(token); } else showToast('No user token', 'error'); };
+        refreshPagesBtn.onclick = fetchProfileAndPages;
 
-        // Fetch Videos/Reels with Pagination
-        async function fetchPageVideos(pageId, token, reset = true) {
-            if (!pageId || !token) return;
+        // Fetch videos from selected page
+        async function fetchPageVideos(reset = true) {
+            if (!currentPageId || !currentPageToken) { showToast('Select a page first', 'error'); return; }
             if (reset) { allMedia = []; nextCursor = null; }
             mediaGrid.innerHTML = '<div class="col-span-full flex justify-center"><div class="loader"></div></div>';
-            let url = `https://graph.facebook.com/v19.0/${pageId}/videos?fields=id,title,description,permalink,created_time,thumbnail_url,views,length,comments.summary(true),reactions.summary(true)&limit=20`;
-            if (nextCursor && !reset) url += `&after=${nextCursor}`;
             try {
-                const res = await fetch(`${url}&access_token=${token}`);
-                addApiCall();
-                const data = await res.json();
-                if (data.error) throw new Error(data.error.message);
+                let url = `/api/pages/${currentPageId}/videos?limit=20`;
+                if (nextCursor && !reset) url += `&after=${nextCursor}`;
+                const data = await apiRequest(url);
                 const videos = data.data || [];
-                const enriched = videos.map(v => ({ ...v, is_reel: (v.title?.toLowerCase().includes('reel') || v.length < 90 || v.permalink?.includes('/reel/')), reactions_count: v.reactions?.summary?.total_count || 0, comments_count: v.comments?.summary?.total_count || 0 }));
+                const enriched = videos.map(v => ({
+                    ...v,
+                    is_reel: (v.title?.toLowerCase().includes('reel') || v.length < 90 || v.permalink?.includes('/reel/')),
+                    reactions_count: v.reactions?.summary?.total_count || 0,
+                    comments_count: v.comments?.summary?.total_count || 0
+                }));
                 allMedia = reset ? enriched : [...allMedia, ...enriched];
                 nextCursor = data.paging?.cursors?.after || null;
                 renderMediaGallery();
                 updateStatisticsAndChart();
-                if (nextCursor) loadMoreBtn.classList.remove('hidden'); else loadMoreBtn.classList.add('hidden');
+                if (nextCursor) loadMoreBtn.classList.remove('hidden');
+                else loadMoreBtn.classList.add('hidden');
                 addActivity(`Loaded ${enriched.length} media items`);
-            } catch (e) { mediaGrid.innerHTML = `<div class="col-span-full text-red-400">Error: ${e.message}</div>`; addActivity(`Video fetch error: ${e.message}`, 'error'); }
+            } catch (e) {
+                mediaGrid.innerHTML = `<div class="col-span-full text-red-400">Error: ${e.message}</div>`;
+                addActivity(`Video fetch error: ${e.message}`);
+            }
         }
+
         function renderMediaGallery() {
             let filtered = [...allMedia];
             if (searchInput.value) filtered = filtered.filter(m => (m.title || '').toLowerCase().includes(searchInput.value.toLowerCase()) || (m.description || '').toLowerCase().includes(searchInput.value.toLowerCase()));
@@ -328,40 +513,118 @@
             if (filterSelect.value === 'video') filtered = filtered.filter(m => !m.is_reel);
             if (sortSelect.value === 'views') filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
             else filtered.sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
-            mediaGrid.innerHTML = filtered.map(m => `<div class="media-card p-3"><div class="relative"><img src="${m.thumbnail_url || 'https://via.placeholder.com/300x180?text=No+thumb'}" class="w-full h-44 object-cover rounded-xl"><span class="absolute top-2 left-2 bg-black/60 text-xs px-2 rounded-full">${m.is_reel ? '🎬 REEL' : '📽️ VIDEO'}</span><span class="absolute bottom-2 right-2 bg-black/60 text-xs px-2 rounded">👁️ ${(m.views || 0).toLocaleString()}</span></div><div class="mt-2"><div class="font-bold truncate">${m.title || 'Untitled'}</div><div class="flex justify-between text-xs mt-1"><span><i class="far fa-heart"></i> ${m.reactions_count || 0}</span><span><i class="far fa-comment"></i> ${m.comments_count || 0}</span><span>📅 ${new Date(m.created_time).toLocaleDateString()}</span></div><div class="flex gap-2 mt-2"><button class="text-blue-500 text-sm copyLinkBtn" data-link="${m.permalink}"><i class="fas fa-copy"></i> Copy Link</button><button class="text-green-500 text-sm previewBtn" data-video="${m.permalink}"><i class="fas fa-play-circle"></i> Preview</button></div></div></div>`).join('');
-            document.querySelectorAll('.copyLinkBtn').forEach(btn => btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.dataset.link); showToast('Link copied'); }));
-            document.querySelectorAll('.previewBtn').forEach(btn => btn.addEventListener('click', () => { document.getElementById('previewVideo').src = btn.dataset.video; document.getElementById('previewModal').classList.remove('hidden'); }));
+
+            mediaGrid.innerHTML = filtered.map(m => `
+                <div class="media-card p-3">
+                    <div class="relative">
+                        <img src="${m.thumbnail_url || 'https://via.placeholder.com/300x180?text=No+thumb'}" class="w-full h-44 object-cover rounded-xl">
+                        <span class="absolute top-2 left-2 bg-black/60 text-xs px-2 rounded-full">${m.is_reel ? '🎬 REEL' : '📽️ VIDEO'}</span>
+                        <span class="absolute bottom-2 right-2 bg-black/60 text-xs px-2 rounded">👁️ ${(m.views || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="mt-2">
+                        <div class="font-bold truncate">${m.title || 'Untitled'}</div>
+                        <div class="flex justify-between text-xs mt-1">
+                            <span><i class="far fa-heart"></i> ${m.reactions_count || 0}</span>
+                            <span><i class="far fa-comment"></i> ${m.comments_count || 0}</span>
+                            <span>📅 ${new Date(m.created_time).toLocaleDateString()}</span>
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button class="text-blue-500 text-sm copyLinkBtn" data-link="${m.permalink}"><i class="fas fa-copy"></i> Copy Link</button>
+                            <button class="text-green-500 text-sm previewBtn" data-video="${m.permalink}"><i class="fas fa-play-circle"></i> Preview</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+
+            document.querySelectorAll('.copyLinkBtn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); navigator.clipboard.writeText(btn.dataset.link); showToast('Link copied'); }));
+            document.querySelectorAll('.previewBtn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('previewVideo').src = btn.dataset.video; document.getElementById('previewModal').classList.remove('hidden'); }));
         }
+
         function updateStatisticsAndChart() {
             const total = allMedia.length;
             const totalViewSum = allMedia.reduce((s, v) => s + (v.views || 0), 0);
             const today = new Date().toISOString().slice(0, 10);
             const todayUploads = allMedia.filter(m => m.created_time?.startsWith(today)).length;
-            totalVideosSpan.innerText = total; totalViewsSpan.innerText = totalViewSum.toLocaleString(); uploadsTodaySpan.innerText = todayUploads;
-            // Update chart (last 7 days uploads)
+            totalVideosSpan.innerText = total;
+            totalViewsSpan.innerText = totalViewSum.toLocaleString();
+            uploadsTodaySpan.innerText = todayUploads;
+
             const last7 = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0, 10); }).reverse();
             const counts = last7.map(date => allMedia.filter(v => v.created_time?.startsWith(date)).length);
             if (chartInstance) chartInstance.destroy();
             const ctx = document.getElementById('uploadChart').getContext('2d');
-            chartInstance = new Chart(ctx, { type: 'bar', data: { labels: last7.map(d => d.slice(5)), datasets: [{ label: 'Uploads', data: counts, backgroundColor: '#1877f2', borderRadius: 8 }] } });
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: last7.map(d => d.slice(5)), datasets: [{ label: 'Uploads', data: counts, backgroundColor: '#1877f2', borderRadius: 8 }] }
+            });
         }
-        loadMoreBtn.onclick = () => { if (nextCursor && currentPageId && currentPageToken) fetchPageVideos(currentPageId, currentPageToken, false); };
 
-        // AI Caption
-        genCaptionBtn.onclick = () => { const style = document.getElementById('aiStyleSelect').value; const dict = { viral: "🔥 This reel is pure FIRE! Double tap & share! #viral #reels", business: "📈 Business insight you can't miss. Watch till the end! #growth", funny: "😂 I'm dying 🤣 Tag someone who needs this laugh!", motivation: "💪 Every day is a new opportunity. Keep going! #motivation" }; const caption = dict[style] || dict.viral; navigator.clipboard.writeText(caption); showToast(`AI Caption copied: ${caption.substring(0, 50)}...`); addActivity('AI caption generated'); };
+        loadMoreBtn.onclick = () => { if (nextCursor && currentPageId) fetchPageVideos(false); };
+
+        // AI Caption Generator
+        genCaptionBtn.onclick = () => {
+            const style = document.getElementById('aiStyleSelect').value;
+            const captions = {
+                viral: "🔥 This reel is pure FIRE! Double tap & share! #viral #reels",
+                business: "📈 Business insight you can't miss. Watch till the end! #growth",
+                funny: "😂 I'm dying 🤣 Tag someone who needs this laugh!",
+                motivation: "💪 Every day is a new opportunity. Keep going! #motivation"
+            };
+            const caption = captions[style] || captions.viral;
+            navigator.clipboard.writeText(caption);
+            showToast(`AI Caption copied`);
+            addActivity('AI caption generated');
+        };
 
         // Bulk Publisher
         let bulkQueue = [];
         openBulkModal.onclick = () => document.getElementById('bulkModal').classList.remove('hidden');
         closeBulk.onclick = () => document.getElementById('bulkModal').classList.add('hidden');
-        bulkFileInput.onchange = (e) => { bulkQueue = Array.from(e.target.files); document.getElementById('queueList').innerHTML = bulkQueue.map(f => `<div>${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)</div>`).join(''); };
-        async function publishSingleReel(pageId, token, file, title) { let fd = new FormData(); fd.append('source', file); fd.append('title', title || 'XIYAD Reel'); let res = await fetch(`https://graph.facebook.com/v19.0/${pageId}/videos?access_token=${token}`, { method: 'POST', body: fd }); addApiCall(); return await res.json(); }
-        startBulkUpload.onclick = async () => { if (!currentPageId || !currentPageToken) { showToast('Select a page first', 'error'); return; } if (!bulkQueue.length) return; const progressDiv = document.getElementById('bulkProgress'); for (let i = 0; i < bulkQueue.length; i++) { progressDiv.innerText = `Uploading ${i + 1}/${bulkQueue.length}: ${bulkQueue[i].name}`; try { const result = await publishSingleReel(currentPageId, currentPageToken, bulkQueue[i], `Bulk reel ${i + 1}`); if (result.id) { showToast(`Published: ${result.id}`); addActivity(`Bulk published: ${result.id}`); } else showToast(`Failed: ${result.error?.message}`, 'error'); } catch (e) { showToast('Upload error', 'error'); } await new Promise(r => setTimeout(r, 1200)); } progressDiv.innerText = 'Bulk upload completed!'; fetchPageVideos(currentPageId, currentPageToken, true); };
+        bulkFileInput.onchange = (e) => {
+            bulkQueue = Array.from(e.target.files);
+            document.getElementById('queueList').innerHTML = bulkQueue.map(f => `<div>${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)</div>`).join('');
+        };
+        async function publishReel(file, title) {
+            const formData = new FormData();
+            formData.append('page_id', currentPageId);
+            formData.append('title', title);
+            formData.append('video', file);
+            const token = userTokenInput.value;
+            const res = await fetch('/api/publish', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+        }
+        startBulkUpload.onclick = async () => {
+            if (!currentPageId) { showToast('Select a page first', 'error'); return; }
+            if (!bulkQueue.length) return;
+            const progressDiv = document.getElementById('bulkProgress');
+            for (let i = 0; i < bulkQueue.length; i++) {
+                progressDiv.innerText = `Uploading ${i + 1}/${bulkQueue.length}: ${bulkQueue[i].name}`;
+                try {
+                    const result = await publishReel(bulkQueue[i], `Bulk reel ${i + 1}`);
+                    if (result.id) { showToast(`Published: ${result.id}`); addActivity(`Bulk published: ${result.id}`); }
+                    else showToast(`Failed: ${result.error}`, 'error');
+                } catch (e) { showToast(`Upload error: ${e.message}`, 'error'); }
+                await new Promise(r => setTimeout(r, 1200));
+            }
+            progressDiv.innerText = 'Bulk completed!';
+            fetchPageVideos(true);
+        };
 
         // Export CSV
-        exportBtn.onclick = () => { const rows = [["Title", "Permalink", "Views", "Date", "Type"]]; allMedia.forEach(m => { rows.push([m.title || "", m.permalink || "", m.views || "", m.created_time || "", m.is_reel ? "Reel" : "Video"]); }); const csv = rows.map(r => r.join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "xiya_media_export.csv"; a.click(); showToast('CSV exported'); addActivity('Exported CSV'); };
+        exportBtn.onclick = () => {
+            const rows = [["Title", "Permalink", "Views", "Date", "Type"]];
+            allMedia.forEach(m => { rows.push([m.title || "", m.permalink || "", m.views || "", m.created_time || "", m.is_reel ? "Reel" : "Video"]); });
+            const csv = rows.map(r => r.join(",")).join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "xiya_media.csv";
+            a.click();
+            showToast("CSV exported");
+            addActivity("Exported CSV");
+        };
 
-        // Search & Filter listeners
+        // Event listeners for search/filter
         searchInput.addEventListener('input', () => renderMediaGallery());
         filterSelect.addEventListener('change', () => renderMediaGallery());
         sortSelect.addEventListener('change', () => renderMediaGallery());
@@ -369,7 +632,7 @@
         resetBtn.onclick = () => { localStorage.clear(); location.reload(); };
         themeToggle.onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); };
 
-        // Initial Load
+        // Load stored data
         function init() {
             appIdInput.value = localStorage.getItem('fb_app_id') || '';
             appSecretInput.value = localStorage.getItem('fb_app_secret') || '';
@@ -377,8 +640,8 @@
             try { activeAccounts = JSON.parse(localStorage.getItem('xiya_accounts') || '[]'); } catch (e) { activeAccounts = []; }
             renderMultiAccounts();
             if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-            updateApiCallUI(); function updateApiCallUI() { apiCallCount = parseInt(localStorage.getItem('api_calls') || '0'); apiHitsSpan.innerText = apiCallCount; }
-            if (userTokenInput.value) { checkTokenHealth(userTokenInput.value); fetchProfile(userTokenInput.value); fetchUserPages(userTokenInput.value); }
+            apiCallsSpan.innerText = apiCallCount;
+            if (userTokenInput.value) { checkTokenHealth(); fetchProfileAndPages(); }
             addActivity('Dashboard ready — A to Z features loaded');
         }
         init();
