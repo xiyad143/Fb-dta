@@ -1,698 +1,387 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XIYAD FACEBOOK Media Pro</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --primary: #1877F2; --primary-hover: #166FE5; --bg: #f0f2f5; --card-bg: rgba(255,255,255,0.75);
-      --text: #1c1e21; --text-secondary: #65676b; --border: #dddfe2;
-      --glass-bg: rgba(255,255,255,0.7); --glass-border: rgba(255,255,255,0.4);
-      --shadow: 0 8px 32px rgba(0,0,0,0.1); --radius: 16px;
-      --success: #42B72A; --error-bg: #fbe3e4; --error-text: #8b0000;
-    }
-    body.dark {
-      --bg: #18191a; --card-bg: rgba(36,37,38,0.85); --text: #e4e6eb; --text-secondary: #b0b3b8;
-      --border: #3e4042; --glass-bg: rgba(36,37,38,0.8); --glass-border: rgba(255,255,255,0.1);
-      --shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      background-attachment: fixed;
-      color: var(--text); transition: background 0.3s, color 0.3s;
-    }
-    body.dark { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
-    .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-    .navbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem 0; margin-bottom: 2rem; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .logo { display: flex; align-items: center; gap: 0.5rem; font-size: 1.8rem; font-weight: 700; color: white; }
-    .nav-links { display: flex; gap: 0.8rem; flex-wrap: wrap; }
-    .nav-links button {
-      background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
-      padding: 0.6rem 1.2rem; border-radius: 50px; cursor: pointer; font-weight: 600;
-      color: var(--text); transition: all 0.2s;
-    }
-    .nav-links button:hover, .nav-links button.active {
-      background: var(--primary); color: white; border-color: var(--primary);
-    }
-    .card {
-      background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
-      border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem;
-      animation: fadeIn 0.5s;
-    }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-    .btn {
-      padding:0.8rem 1.5rem; border:none; border-radius:50px; font-weight:600; cursor:pointer;
-      display:inline-flex; align-items:center; gap:0.5rem; transition: all 0.2s;
-    }
-    .btn-primary { background:var(--primary); color:white; }
-    .btn-primary:hover { background:var(--primary-hover); transform:translateY(-2px); box-shadow:0 4px 12px rgba(24,119,242,0.4); }
-    .btn-outline { background:transparent; border:2px solid var(--primary); color:var(--primary); }
-    .btn-outline:hover { background:var(--primary); color:white; }
-    .btn-danger { background:var(--error-bg); color:var(--error-text); border:1px solid var(--error-text); }
-    .btn-danger:hover { background:var(--error-text); color:white; }
-    .hidden { display:none !important; }
-    .status-badge {
-      display: inline-block; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem;
-    }
-    .status-connected { background: #e7f3e8; color: #1b7a28; }
-    .status-disconnected { background: #fbe3e4; color: #8b0000; }
-    body.dark .status-connected { background: #1b3a1b; color: #a3e4a3; }
-    body.dark .status-disconnected { background: #3a1c1c; color: #ffb0b0; }
-    .spinner {
-      border:3px solid rgba(24,119,242,0.2); border-top:3px solid var(--primary); border-radius:50%;
-      width:30px; height:30px; animation:spin 0.8s linear infinite; margin:1rem auto;
-    }
-    @keyframes spin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
-    .toast {
-      position:fixed; bottom:20px; right:20px; background:var(--primary); color:white;
-      padding:1rem 1.5rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3);
-      animation: slideUp 0.3s; z-index:999;
-    }
-    @keyframes slideUp { from { transform:translateY(100px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-    .input-field {
-      width:100%; padding:0.8rem 1rem; border:1px solid var(--border); border-radius:50px;
-      background:var(--bg); color:var(--text); font-size:1rem; margin-bottom:0.5rem;
-    }
-    .input-field:focus { outline:none; border-color:var(--primary); }
-    select.input-field { appearance: none; background-repeat: no-repeat; background-position: right 10px center; }
-    .progress-bar { width:100%; height:8px; background:var(--border); border-radius:4px; margin:1rem 0; overflow:hidden; }
-    .progress-fill { height:100%; background:var(--primary); border-radius:4px; transition: width 0.3s; }
-    .page-card, .video-card {
-      background: var(--glass-bg); backdrop-filter: blur(10px); border:1px solid var(--glass-border);
-      border-radius:12px; padding:1rem; display:flex; align-items:center; gap:1rem;
-      box-shadow:var(--shadow); margin-bottom:0.5rem; transition: transform 0.2s;
-    }
-    .page-card:hover, .video-card:hover { transform: translateY(-2px); }
-    .page-card img, .video-card img { width:60px; height:60px; border-radius:8px; object-fit:cover; }
-    .token-display { font-family: monospace; word-break: break-all; background: var(--bg); padding: 0.5rem; border-radius: 8px; }
-    @media (max-width:600px) { .navbar { flex-direction: column; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>XIYAD FACEBOOK Media Pro | Complete Dashboard</title>
+    <!-- Font Awesome 6, Chart.js, GSAP -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body {
+            background: radial-gradient(circle at 10% 30%, #eef2ff, #e2e8f0);
+            transition: all 0.3s ease;
+        }
+        body.dark {
+            background: radial-gradient(circle at 10% 30%, #0a0c10, #030507);
+            color: #eef2ff;
+        }
+        /* Glassmorphism core */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        body.dark .glass-card {
+            background: rgba(20, 25, 35, 0.6);
+            border-color: rgba(255,255,255,0.05);
+        }
+        .btn-premium {
+            background: linear-gradient(135deg, #1877f2, #0b5ed7);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 3rem;
+            padding: 0.6rem 1.4rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(24,119,242,0.3);
+        }
+        .btn-premium:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .input-xiya {
+            background: rgba(255,255,255,0.85);
+            border-radius: 2rem;
+            padding: 0.8rem 1.2rem;
+            border: none;
+            outline: none;
+            width: 100%;
+            transition: 0.2s;
+        }
+        body.dark .input-xiya { background: #1e293b; color: white; }
+        .badge-neon { background: #1877f2; box-shadow: 0 0 6px #1877f2; border-radius: 40px; padding: 4px 12px; font-size: 0.7rem; }
+        .toast-notify {
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px;
+            backdrop-filter: blur(8px); font-weight: 500; box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+        }
+        .media-card {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        body.dark .media-card { background: #1f2937; border-color: #374151; }
+        .media-card:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.3); }
+        .loader { border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top: 3px solid #1877f2; width: 32px; height: 32px; animation: spin 0.7s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal-glass {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            transition: 0.2s;
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #ccc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #1877f2; border-radius: 10px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .activity-item { font-size: 0.8rem; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 6px 0; }
+    </style>
 </head>
-<body class="light">
-  <div class="container">
-    <div class="navbar">
-      <div class="logo"><i class="fab fa-facebook-square"></i> XIYAD FACEBOOK Media Pro</div>
-      <div class="nav-links">
-        <button id="navDashboard" class="active"><i class="fas fa-chart-line"></i> Dashboard</button>
-        <button id="navPages"><i class="fas fa-flag"></i> Pages</button>
-        <button id="navReel"><i class="fas fa-video"></i> Reel Publisher</button>
-        <button id="navExtractor"><i class="fas fa-download"></i> Extractor</button>
-        <button id="navSettings"><i class="fas fa-cog"></i> Settings</button>
-        <button id="themeToggle"><i class="fas fa-moon"></i></button>
-      </div>
-    </div>
-
-    <!-- Dashboard Section -->
-    <div id="dashboardSection">
-      <div class="card">
-        <h2>📊 Dashboard</h2>
-        <div class="grid-2" style="margin:1rem 0;">
-          <div class="card" style="text-align:center;"><h3 id="totalRequests">0</h3><span>Total Requests</span></div>
-          <div class="card" style="text-align:center;"><h3 id="totalUploads">0</h3><span>Uploads</span></div>
-          <div class="card" style="text-align:center;"><h3 id="totalSuccess">0</h3><span>Success</span></div>
-          <div class="card" style="text-align:center;"><h3 id="totalErrors">0</h3><span>Errors</span></div>
-        </div>
-        <div style="display:flex; align-items:center; gap:1rem;">
-          <span>API Status:</span>
-          <span id="apiStatusBadge" class="status-badge status-disconnected">Unknown</span>
-          <button id="checkApiBtn" class="btn-outline btn-sm">Check Token</button>
-        </div>
-        <h3>Activity (Last 7 Days)</h3>
-        <canvas id="activityChart" height="100"></canvas>
-        <h3>Recent Actions</h3>
-        <div id="recentActions" style="max-height:200px; overflow-y:auto;"></div>
-      </div>
-    </div>
-
-    <!-- Pages Section -->
-    <div id="pagesSection" class="hidden">
-      <div class="card">
-        <h2>📄 Managed Pages</h2>
-        <div id="pagesList"></div>
-        <div id="pageVideoResult" class="hidden" style="margin-top:2rem;"></div>
-      </div>
-    </div>
-
-    <!-- Reel Publisher Section -->
-    <div id="reelSection" class="hidden">
-      <div class="card">
-        <h2>🎥 Reel Publisher</h2>
-        <div class="form-group">
-          <label>Select Page</label>
-          <select id="reelPageSelect" class="input-field"><option value="">-- Choose Page --</option></select>
-        </div>
-        <div class="form-group"><label>Title</label><input type="text" id="reelTitle" class="input-field" placeholder="Reel title"></div>
-        <div class="form-group"><label>Description</label><textarea id="reelDescription" class="input-field" rows="2" placeholder="Description & hashtags"></textarea></div>
-        <div class="form-group"><label>Video File</label><input type="file" id="reelFile" accept="video/*" class="input-field"></div>
-        <div class="form-group">
-          <label>Publish Mode</label>
-          <select id="reelPublishMode" class="input-field">
-            <option value="PUBLISH_NOW">Publish Now</option>
-            <option value="DRAFT">Draft</option>
-            <option value="SCHEDULED">Schedule</option>
-          </select>
-        </div>
-        <div id="scheduleField" class="hidden form-group">
-          <label>Schedule Time</label>
-          <input type="datetime-local" id="reelScheduleTime" class="input-field">
-        </div>
-        <button id="reelUploadBtn" class="btn btn-primary"><i class="fas fa-upload"></i> Upload Reel</button>
-        <div id="reelProgress" class="hidden" style="margin-top:1rem;">
-          <div class="progress-bar"><div id="reelProgressFill" class="progress-fill" style="width:0%"></div></div>
-          <p id="reelStatusText">Starting...</p>
-        </div>
-        <div id="reelResult" class="hidden" style="margin-top:1rem;"></div>
-      </div>
-    </div>
-
-    <!-- Extractor Section -->
-    <div id="extractorSection" class="hidden">
-      <div class="card">
-        <h2>🔍 Public Media Extractor</h2>
-        <div style="display:flex; gap:0.5rem;">
-          <input type="text" id="extractUrl" class="input-field" placeholder="Facebook page or video URL">
-          <button id="extractBtn" class="btn btn-primary">Scan</button>
-        </div>
-        <div id="extractLoading" class="hidden"><div class="spinner"></div></div>
-        <div id="extractError" class="hidden" style="background:var(--error-bg); color:var(--error-text); padding:1rem; border-radius:8px;"></div>
-        <div id="extractResult" class="hidden">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>Results</h3>
-            <div>
-              <input type="text" id="filterInput" class="input-field" style="width:200px; display:inline;" placeholder="Filter...">
-              <button id="copyAllLinks" class="btn-outline btn-sm"><i class="fas fa-copy"></i> Copy All</button>
+<body class="p-5 md:p-8">
+    <div class="max-w-7xl mx-auto relative">
+        <!-- Header -->
+        <div class="flex-between mb-8">
+            <div class="flex items-center gap-3">
+                <i class="fab fa-facebook text-5xl text-[#1877f2] drop-shadow-lg"></i>
+                <h1 class="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-[#1877f2] to-[#8b9dc3] bg-clip-text text-transparent">XIYAD <span class="text-white dark:text-gray-200">Media Pro</span></h1>
             </div>
-          </div>
-          <div id="videoList"></div>
-          <button id="loadMoreBtn" class="btn-primary btn-sm hidden"><i class="fas fa-chevron-down"></i> Load More</button>
+            <div class="flex gap-3">
+                <button id="themeToggleBtn" class="glass-card w-10 h-10 rounded-full flex items-center justify-center"><i class="fas fa-moon"></i></button>
+                <button id="resetFullBtn" class="btn-premium !bg-red-500/80 !shadow-none"><i class="fas fa-trash-alt"></i> Reset All</button>
+            </div>
         </div>
-      </div>
+
+        <!-- SETTINGS: App ID + Secret Manual Input -->
+        <div class="glass-card p-5 mb-6">
+            <h2 class="text-xl font-bold mb-3"><i class="fas fa-sliders-h"></i> Settings & Authentication</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div><label class="text-sm font-semibold">Facebook App ID *</label><input id="appIdInput" class="input-xiya" placeholder="Enter App ID"></div>
+                <div><label class="text-sm font-semibold">App Secret (optional)</label><input id="appSecretInput" type="password" class="input-xiya" placeholder="Stored locally"></div>
+            </div>
+            <div class="flex gap-3 mt-4 flex-wrap">
+                <button id="saveCredBtn" class="btn-premium"><i class="fas fa-save"></i> Save Credentials</button>
+                <button id="connectFbBtn" class="btn-premium !bg-gradient-to-r from-green-600 to-teal-600"><i class="fab fa-facebook"></i> Connect Facebook (OAuth)</button>
+            </div>
+        </div>
+
+        <!-- Token Manager & Profile -->
+        <div class="glass-card p-5 mb-6">
+            <div class="flex-between"><h2 class="text-xl font-bold"><i class="fas fa-key"></i> Token Manager & Profile</h2><button id="addAccountBtn" class="btn-premium !py-1"><i class="fas fa-user-plus"></i> Multi‑Account</button></div>
+            <div class="grid md:grid-cols-2 gap-4 mt-3">
+                <div><label>User Access Token</label><input id="userTokenInput" class="input-xiya" placeholder="Paste token or get from connect"></div>
+                <div class="flex items-end gap-2"><button id="checkTokenBtn" class="btn-premium w-full"><i class="fas fa-stethoscope"></i> Verify Token</button></div>
+            </div>
+            <div id="tokenStatusDiv" class="text-xs mt-2 flex gap-3 flex-wrap"><span class="token-badge">⚡ Token status: idle</span></div>
+            <div id="multiAccountList" class="flex flex-wrap gap-2 mt-3"></div>
+            <div class="flex gap-4 items-center mt-4 border-t pt-3">
+                <div id="profilePic" class="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center"><i class="fas fa-user-circle text-2xl"></i></div>
+                <div><div id="profileName" class="font-bold">Not logged in</div><div id="fbId" class="text-xs opacity-70"></div></div>
+                <button id="refreshPagesBtn" class="btn-premium ml-auto"><i class="fas fa-sync-alt"></i> Load My Pages</button>
+            </div>
+        </div>
+
+        <!-- Pages Manager -->
+        <div class="glass-card p-5 mb-6">
+            <h2 class="text-xl font-bold mb-2"><i class="fas fa-th-large"></i> Your Managed Pages</h2>
+            <div id="pagesContainer" class="flex flex-wrap gap-3 max-h-48 overflow-y-auto"></div>
+            <div id="activePageInfo" class="text-sm text-blue-400 mt-2"></div>
+        </div>
+
+        <!-- Stats Dashboard Cards -->
+        <div class="grid lg:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card p-4 text-center"><i class="fas fa-video text-2xl text-blue-400"></i><h3 class="text-2xl font-bold" id="totalVideos">0</h3><p>Total Videos/Reels</p></div>
+            <div class="glass-card p-4 text-center"><i class="fas fa-chart-line text-2xl text-green-400"></i><h3 class="text-2xl font-bold" id="totalViews">0</h3><p>Total Views</p></div>
+            <div class="glass-card p-4 text-center"><i class="fas fa-calendar-day text-2xl text-purple-400"></i><h3 class="text-2xl font-bold" id="uploadsToday">0</h3><p>Uploads Today</p></div>
+            <div class="glass-card p-4 text-center"><i class="fas fa-rocket text-2xl text-pink-400"></i><h3 class="text-2xl font-bold" id="apiHits">0</h3><p>API Calls</p></div>
+        </div>
+
+        <!-- Graph System (Chart.js) + Activity Feed -->
+        <div class="grid lg:grid-cols-2 gap-6 mb-6">
+            <div class="glass-card p-5">
+                <h3 class="font-bold text-lg mb-2"><i class="fas fa-chart-line"></i> Graph Analytics: Uploads per day (last 7 days)</h3>
+                <canvas id="uploadChart" width="400" height="200" style="max-height: 250px;"></canvas>
+            </div>
+            <div class="glass-card p-5">
+                <div class="flex-between"><h3 class="font-bold text-lg"><i class="fas fa-list-alt"></i> Activity Timeline</h3><button id="clearActivityBtn" class="text-xs text-gray-500">Clear</button></div>
+                <div id="activityFeed" class="h-48 overflow-y-auto mt-2 text-sm space-y-1"></div>
+            </div>
+        </div>
+
+        <!-- AI Caption & Bulk Publisher Tools -->
+        <div class="glass-card p-5 mb-6 flex flex-wrap gap-4 justify-between items-center">
+            <div class="flex gap-2 items-center"><i class="fas fa-robot text-xl"></i> <strong>AI Caption:</strong> <select id="aiStyleSelect" class="rounded-full px-3 py-1"><option value="viral">🔥 Viral</option><option value="business">💼 Business</option><option value="funny">😂 Funny</option><option value="motivation">💪 Motivation</option></select><button id="genCaptionBtn" class="btn-premium">✨ Generate & Copy</button></div>
+            <div><button id="openBulkModal" class="btn-premium"><i class="fas fa-layer-group"></i> Bulk Reel Publisher</button></div>
+            <div><button id="exportCSVBtn" class="btn-premium !bg-emerald-600"><i class="fas fa-download"></i> Export CSV</button></div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="glass-card p-4 mb-6 flex flex-wrap gap-3 items-center">
+            <input id="searchInput" class="input-xiya flex-1" placeholder="🔍 Search by title, hashtag...">
+            <select id="filterType" class="rounded-full px-4 py-2 bg-white dark:bg-gray-800"><option value="all">All Media</option><option value="reel">Reels Only</option><option value="video">Videos Only</option></select>
+            <select id="sortOrder" class="rounded-full px-4 py-2"><option value="date">Newest First</option><option value="views">Most Viewed</option></select>
+        </div>
+
+        <!-- Media Gallery (Videos & Reels) -->
+        <div class="glass-card p-5">
+            <div class="flex-between"><h2 class="text-xl font-bold"><i class="fab fa-facebook"></i> Media Library</h2><button id="loadMoreBtn" class="btn-premium hidden">Load More ⬇️</button></div>
+            <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-5 max-h-[600px] overflow-y-auto p-1"></div>
+        </div>
     </div>
 
-    <!-- Settings Section -->
-    <div id="settingsSection" class="hidden">
-      <div class="card">
-        <h2>⚙️ Settings</h2>
-        <p style="color:var(--text-secondary); margin-bottom:1rem;">All data is stored <strong>only in your browser</strong>.</p>
-        <div class="form-group"><label>Facebook App ID</label><input type="text" id="settingsAppId" class="input-field" placeholder="App ID"></div>
-        <div class="form-group"><label>Facebook App Secret</label><input type="password" id="settingsAppSecret" class="input-field" placeholder="App Secret"></div>
-        <div class="form-group"><label>User Access Token</label><input type="password" id="settingsUserToken" class="input-field" placeholder="User Token (optional)"></div>
-        <div class="form-group"><label>Page Access Token</label><input type="password" id="settingsPageToken" class="input-field" placeholder="Page Token (optional)"></div>
-        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-          <button id="saveSettingsBtn" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
-          <button id="resetSettingsBtn" class="btn btn-danger"><i class="fas fa-undo"></i> Reset All</button>
+    <!-- Bulk Publisher Modal -->
+    <div id="bulkModal" class="fixed inset-0 modal-glass hidden items-center justify-center z-50">
+        <div class="glass-card w-full max-w-2xl p-6 rounded-3xl">
+            <div class="flex-between"><h2 class="text-xl font-bold"><i class="fab fa-facebook"></i> Bulk Reel Publisher</h2><i id="closeBulk" class="fas fa-times text-2xl cursor-pointer"></i></div>
+            <div class="border-dashed border-2 rounded-2xl p-4 mt-3 text-center"><input type="file" id="bulkFileInput" multiple accept="video/mp4,video/quicktime,video/webm"><p class="text-sm">Select multiple MP4 videos</p></div>
+            <div id="queueList" class="max-h-48 overflow-y-auto text-sm my-3"></div>
+            <button id="startBulkUpload" class="btn-premium w-full">Start Publishing Queue</button>
+            <div id="bulkProgress" class="text-sm mt-2"></div>
         </div>
-        <div style="margin-top:1rem;">
-          <button id="connectFbBtn" class="btn btn-outline"><i class="fab fa-facebook"></i> Connect Facebook (auto-fill tokens)</button>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div id="toast" class="hidden toast"></div>
+    <!-- Video Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 modal-glass hidden items-center justify-center z-50">
+        <div class="glass-card max-w-3xl w-full p-4"><div class="flex justify-end"><i id="closePreview" class="fas fa-times cursor-pointer text-2xl"></i></div><video id="previewVideo" controls class="w-full rounded-2xl" autoplay></video><div id="previewInfo" class="mt-2 text-sm"></div></div>
+    </div>
 
-  <script>
-    // ---------- State ----------
-    const STORAGE_KEYS = {
-      appId: 'fb_app_id', appSecret: 'fb_app_secret',
-      userToken: 'fb_user_token', pageToken: 'fb_page_token',
-      history: 'fb_dashboard_history', theme: 'fb_theme'
-    };
+    <script>
+        // ---------- DOM Elements ----------
+        const appIdInput = document.getElementById('appIdInput');
+        const appSecretInput = document.getElementById('appSecretInput');
+        const userTokenInput = document.getElementById('userTokenInput');
+        const saveCredBtn = document.getElementById('saveCredBtn');
+        const connectBtn = document.getElementById('connectFbBtn');
+        const checkTokenBtn = document.getElementById('checkTokenBtn');
+        const addAccountBtn = document.getElementById('addAccountBtn');
+        const refreshPagesBtn = document.getElementById('refreshPagesBtn');
+        const resetBtn = document.getElementById('resetFullBtn');
+        const themeToggle = document.getElementById('themeToggleBtn');
+        const exportBtn = document.getElementById('exportCSVBtn');
+        const genCaptionBtn = document.getElementById('genCaptionBtn');
+        const openBulkModal = document.getElementById('openBulkModal');
+        const closeBulk = document.getElementById('closeBulk');
+        const bulkFileInput = document.getElementById('bulkFileInput');
+        const startBulkUpload = document.getElementById('startBulkUpload');
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterType');
+        const sortSelect = document.getElementById('sortOrder');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const pagesDiv = document.getElementById('pagesContainer');
+        const mediaGrid = document.getElementById('mediaGrid');
+        const totalVideosSpan = document.getElementById('totalVideos');
+        const totalViewsSpan = document.getElementById('totalViews');
+        const uploadsTodaySpan = document.getElementById('uploadsToday');
+        const apiHitsSpan = document.getElementById('apiHits');
+        const tokenStatusDiv = document.getElementById('tokenStatusDiv');
+        const activityFeedDiv = document.getElementById('activityFeed');
+        const clearActivityBtn = document.getElementById('clearActivityBtn');
+        const profilePicDiv = document.getElementById('profilePic');
+        const profileNameSpan = document.getElementById('profileName');
+        const fbIdSpan = document.getElementById('fbId');
+        const activePageInfo = document.getElementById('activePageInfo');
 
-    let settings = {
-      appId: localStorage.getItem(STORAGE_KEYS.appId) || '',
-      appSecret: localStorage.getItem(STORAGE_KEYS.appSecret) || '',
-      userToken: localStorage.getItem(STORAGE_KEYS.userToken) || '',
-      pageToken: localStorage.getItem(STORAGE_KEYS.pageToken) || '',
-    };
-    let history = JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || '[]');
+        // Global State
+        let currentPageId = null, currentPageToken = null;
+        let allMedia = [];
+        let nextCursor = null;
+        let apiCallCount = 0;
+        let activeAccounts = [];
+        let activityLog = [];
+        let chartInstance = null;
 
-    // Populate settings fields
-    document.getElementById('settingsAppId').value = settings.appId;
-    document.getElementById('settingsAppSecret').value = settings.appSecret;
-    document.getElementById('settingsUserToken').value = settings.userToken;
-    document.getElementById('settingsPageToken').value = settings.pageToken;
+        // Helper: Toast & Activity
+        function showToast(msg, type = 'info') { let toast = document.createElement('div'); toast.className = 'toast-notify'; toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
+        function addActivity(msg, type = 'info') { activityLog.unshift({ msg, time: new Date().toLocaleTimeString(), type }); if (activityLog.length > 30) activityLog.pop(); renderActivity(); }
+        function renderActivity() { activityFeedDiv.innerHTML = activityLog.map(log => `<div class="activity-item"><span class="text-xs opacity-50">${log.time}</span> ${log.msg}</div>`).join(''); }
+        clearActivityBtn.onclick = () => { activityLog = []; renderActivity(); };
+        function addApiCall() { apiCallCount++; localStorage.setItem('api_calls', apiCallCount); apiHitsSpan.innerText = apiCallCount; }
 
-    // Navigation
-    const sections = {
-      dashboard: document.getElementById('dashboardSection'),
-      pages: document.getElementById('pagesSection'),
-      reel: document.getElementById('reelSection'),
-      extractor: document.getElementById('extractorSection'),
-      settings: document.getElementById('settingsSection')
-    };
-    const navBtns = {
-      dashboard: document.getElementById('navDashboard'),
-      pages: document.getElementById('navPages'),
-      reel: document.getElementById('navReel'),
-      extractor: document.getElementById('navExtractor'),
-      settings: document.getElementById('navSettings')
-    };
-
-    function showSection(name) {
-      Object.values(sections).forEach(s => s.classList.add('hidden'));
-      sections[name].classList.remove('hidden');
-      Object.values(navBtns).forEach(b => b.classList.remove('active'));
-      navBtns[name].classList.add('active');
-      if (name === 'pages' && settings.userToken) loadPages();
-      if (name === 'reel' && settings.userToken) loadPagesForReel();
-      if (name === 'dashboard') updateDashboard();
-    }
-
-    Object.keys(navBtns).forEach(name => {
-      navBtns[name].addEventListener('click', () => showSection(name));
-    });
-
-    // Toast
-    function showToast(msg, bg = '#1877F2') {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.style.background = bg;
-      t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 3000);
-    }
-
-    // Settings save/reset
-    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-      settings.appId = document.getElementById('settingsAppId').value.trim();
-      settings.appSecret = document.getElementById('settingsAppSecret').value.trim();
-      settings.userToken = document.getElementById('settingsUserToken').value.trim();
-      settings.pageToken = document.getElementById('settingsPageToken').value.trim();
-      localStorage.setItem(STORAGE_KEYS.appId, settings.appId);
-      localStorage.setItem(STORAGE_KEYS.appSecret, settings.appSecret);
-      localStorage.setItem(STORAGE_KEYS.userToken, settings.userToken);
-      localStorage.setItem(STORAGE_KEYS.pageToken, settings.pageToken);
-      showToast('Settings saved!', '#42B72A');
-    });
-
-    document.getElementById('resetSettingsBtn').addEventListener('click', () => {
-      localStorage.clear();
-      settings = { appId: '', appSecret: '', userToken: '', pageToken: '' };
-      document.getElementById('settingsAppId').value = '';
-      document.getElementById('settingsAppSecret').value = '';
-      document.getElementById('settingsUserToken').value = '';
-      document.getElementById('settingsPageToken').value = '';
-      history = [];
-      showToast('All data cleared.', '#ff4d4d');
-      updateDashboard();
-    });
-
-    // Facebook OAuth auto-connect
-    document.getElementById('connectFbBtn').addEventListener('click', () => {
-      if (!settings.appId) { showToast('Enter App ID first', '#ff4d4d'); return; }
-      const redirect = window.location.origin + '/';
-      const url = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${settings.appId}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=public_profile,pages_show_list,pages_read_engagement,pages_manage_posts`;
-      window.location.href = url;
-    });
-
-    // Handle OAuth redirect
-    function handleOAuth() {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const token = params.get('access_token');
-      if (token) {
-        settings.userToken = token;
-        localStorage.setItem(STORAGE_KEYS.userToken, token);
-        document.getElementById('settingsUserToken').value = token;
-        window.location.hash = '';
-        fetchUserProfile();
-        showToast('Connected! Token saved.', '#42B72A');
-      }
-    }
-
-    async function fetchUserProfile() {
-      if (!settings.userToken) return;
-      try {
-        const res = await fetch(`https://graph.facebook.com/me?fields=name,picture&access_token=${settings.userToken}`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        showToast(`Logged in as ${data.name}`, '#1877F2');
-      } catch (e) { showToast('Error fetching profile', '#ff4d4d'); }
-    }
-
-    // API status check
-    document.getElementById('checkApiBtn').addEventListener('click', async () => {
-      const token = settings.userToken || settings.pageToken;
-      if (!token) { showToast('No token to check', '#ff4d4d'); return; }
-      try {
-        const res = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${settings.appId}|${settings.appSecret}`);
-        const data = await res.json();
-        if (data.data && data.data.is_valid) {
-          document.getElementById('apiStatusBadge').textContent = 'Valid';
-          document.getElementById('apiStatusBadge').className = 'status-badge status-connected';
-        } else {
-          throw new Error('Invalid token');
+        // Token Health Check
+        async function checkTokenHealth(token) {
+            if (!token) { tokenStatusDiv.innerHTML = '<span class="token-badge">❌ No token</span>'; return false; }
+            tokenStatusDiv.innerHTML = '<span class="token-badge">⏳ Verifying...</span>';
+            try {
+                const res = await fetch(`https://graph.facebook.com/me?fields=id,name&access_token=${token}`);
+                addApiCall();
+                const data = await res.json();
+                if (data.id) { tokenStatusDiv.innerHTML = `<span class="token-badge text-green-400">✅ Valid (${data.name})</span>`; return true; }
+                else { tokenStatusDiv.innerHTML = `<span class="token-badge text-red-400">⚠️ Invalid: ${data.error?.message || 'unknown'}</span>`; return false; }
+            } catch (e) { tokenStatusDiv.innerHTML = '<span class="token-badge">⚠️ Network error</span>'; return false; }
         }
-      } catch (e) {
-        document.getElementById('apiStatusBadge').textContent = 'Invalid';
-        document.getElementById('apiStatusBadge').className = 'status-badge status-disconnected';
-      }
-    });
+        checkTokenBtn.onclick = () => checkTokenHealth(userTokenInput.value);
 
-    // Pages loading
-    async function loadPages() {
-      const list = document.getElementById('pagesList');
-      list.innerHTML = '<p>Loading...</p>';
-      try {
-        const res = await fetch(`https://graph.facebook.com/me/accounts?fields=name,picture,access_token,fan_count&access_token=${settings.userToken}`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        const pages = data.data || [];
-        if (pages.length === 0) { list.innerHTML = '<p>No pages found.</p>'; return; }
-        list.innerHTML = pages.map(p => `
-          <div class="page-card">
-            <img src="${p.picture.data.url}" alt="${p.name}">
-            <div style="flex:1">
-              <strong>${p.name}</strong>
-              <div style="font-size:0.85rem;">${p.fan_count ? p.fan_count.toLocaleString() + ' followers' : ''}</div>
-              <div class="token-display" style="position:relative;">
-                <span id="token-${p.id}" class="hidden">${p.access_token}</span>
-                <button onclick="toggleToken('${p.id}')" class="btn-outline btn-sm">Show/Hide Token</button>
-                <button onclick="copyText('${p.access_token}')" class="btn-outline btn-sm">Copy</button>
-              </div>
-            </div>
-            <button onclick="fetchPageVideos('${p.id}', '${p.access_token}', '${p.name}')" class="btn-primary btn-sm">Videos</button>
-          </div>
-        `).join('');
-      } catch (e) { list.innerHTML = `<p>Error: ${e.message}</p>`; }
-    }
-
-    window.toggleToken = (id) => {
-      document.getElementById(`token-${id}`).classList.toggle('hidden');
-    };
-    window.copyText = (text) => {
-      navigator.clipboard.writeText(text);
-      showToast('Copied!');
-    };
-
-    // Fetch page videos with pagination (Graph API)
-    let currentPageVideos = [];
-    let nextPageUrl = null;
-    window.fetchPageVideos = async (pageId, token, pageName) => {
-      document.getElementById('pageVideoResult').classList.remove('hidden');
-      const resultDiv = document.getElementById('pageVideoResult');
-      resultDiv.innerHTML = `<p>Loading videos for ${pageName}...</p><div class="spinner"></div>`;
-      currentPageVideos = [];
-      nextPageUrl = null;
-      try {
-        const initialUrl = `https://graph.facebook.com/${pageId}/videos?fields=id,title,description,created_time,thumbnails,source,length&access_token=${token}`;
-        await fetchVideosFromUrl(initialUrl, token, pageName);
-      } catch (e) {
-        resultDiv.innerHTML = `<p style="color:var(--error-text);">Error: ${e.message}</p>`;
-      }
-    };
-
-    async function fetchVideosFromUrl(url, token, pageName) {
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        currentPageVideos = currentPageVideos.concat(data.data || []);
-        nextPageUrl = data.paging?.next || null;
-        renderPageVideos(pageName);
-        addHistory('page_videos', `Fetched ${currentPageVideos.length} videos from ${pageName}`);
-      } catch (e) { throw e; }
-    }
-
-    function renderPageVideos(pageName) {
-      const resultDiv = document.getElementById('pageVideoResult');
-      let html = `<h3>Videos from ${pageName} (${currentPageVideos.length} loaded)</h3>`;
-      html += '<button onclick="copyAllPageVideos()" class="btn-outline btn-sm">Copy All Links</button>';
-      html += '<div id="pageVideoList" style="margin-top:1rem;">';
-      currentPageVideos.forEach(v => {
-        const thumb = v.thumbnails?.data[0]?.uri || 'https://via.placeholder.com/60?text=No+Img';
-        const videoUrl = `https://www.facebook.com/watch?v=${v.id}`;
-        html += `
-          <div class="video-card" style="justify-content:space-between; flex-wrap:wrap;">
-            <div style="display:flex; gap:1rem; align-items:center;">
-              <img src="${thumb}" alt="thumb">
-              <div>
-                <strong>${v.title || 'Untitled'}</strong>
-                <div style="font-size:0.85rem;">${v.created_time ? new Date(v.created_time).toLocaleDateString() : 'N/A'}</div>
-              </div>
-            </div>
-            <div>
-              <button onclick="copyText('${videoUrl}')" class="btn-outline btn-sm">Copy Link</button>
-              <button onclick="downloadVideo('${videoUrl}')" class="btn-primary btn-sm">Download</button>
-            </div>
-          </div>`;
-      });
-      html += '</div>';
-      if (nextPageUrl) {
-        html += `<button onclick="fetchVideosFromUrl('${nextPageUrl}', '${arguments[1]}', '${pageName}')" class="btn-primary btn-sm"><i class="fas fa-chevron-down"></i> Load More</button>`;
-      }
-      resultDiv.innerHTML = html;
-    }
-
-    window.copyAllPageVideos = () => {
-      const links = currentPageVideos.map(v => `https://www.facebook.com/watch?v=${v.id}`).join('\n');
-      copyText(links);
-    };
-
-    // Load pages for Reel uploader
-    async function loadPagesForReel() {
-      const select = document.getElementById('reelPageSelect');
-      select.innerHTML = '<option value="">Loading...</option>';
-      try {
-        const res = await fetch(`https://graph.facebook.com/me/accounts?fields=name,access_token&access_token=${settings.userToken}`);
-        const data = await res.json();
-        const pages = data.data || [];
-        select.innerHTML = '<option value="">-- Choose Page --</option>';
-        pages.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.access_token;
-          opt.textContent = p.name;
-          select.appendChild(opt);
-        });
-      } catch (e) { select.innerHTML = '<option value="">Error loading pages</option>'; }
-    }
-
-    // Reel publishing
-    document.getElementById('reelPublishMode').addEventListener('change', function() {
-      document.getElementById('scheduleField').classList.toggle('hidden', this.value !== 'SCHEDULED');
-    });
-
-    document.getElementById('reelUploadBtn').addEventListener('click', async () => {
-      const pageToken = document.getElementById('reelPageSelect').value;
-      const title = document.getElementById('reelTitle').value.trim();
-      const description = document.getElementById('reelDescription').value.trim();
-      const fileInput = document.getElementById('reelFile');
-      const file = fileInput.files[0];
-      const publishMode = document.getElementById('reelPublishMode').value;
-      let scheduleTime = null;
-      if (publishMode === 'SCHEDULED') {
-        const datetime = document.getElementById('reelScheduleTime').value;
-        if (!datetime) { showToast('Select a schedule time', '#ff4d4d'); return; }
-        scheduleTime = Math.floor(new Date(datetime).getTime() / 1000);
-      }
-
-      if (!pageToken || !title || !file) {
-        showToast('Fill all required fields', '#ff4d4d'); return;
-      }
-
-      const formData = new FormData();
-      formData.append('page_token', pageToken);
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('publish_mode', publishMode);
-      formData.append('video_file', file);
-      if (scheduleTime) formData.append('schedule_time', scheduleTime);
-
-      document.getElementById('reelProgress').classList.remove('hidden');
-      document.getElementById('reelResult').classList.add('hidden');
-      const progressFill = document.getElementById('reelProgressFill');
-      const statusText = document.getElementById('reelStatusText');
-      progressFill.style.width = '30%';
-      statusText.textContent = 'Uploading...';
-
-      try {
-        const res = await fetch('/api/upload-reel', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Upload failed');
-        progressFill.style.width = '100%';
-        statusText.textContent = 'Published!';
-        addHistory('reel_upload', `Reel "${title}" published`);
-        document.getElementById('reelResult').innerHTML = `<div class="alert" style="background:var(--success); color:white; padding:1rem; border-radius:12px;">✅ Reel uploaded! ID: ${data.video_id}</div>`;
-        document.getElementById('reelResult').classList.remove('hidden');
-      } catch (e) {
-        progressFill.style.width = '0%';
-        statusText.textContent = 'Error';
-        addHistory('reel_upload_error', e.message);
-        document.getElementById('reelResult').innerHTML = `<div class="alert" style="background:var(--error-bg); color:var(--error-text); padding:1rem; border-radius:12px;">❌ ${e.message}</div>`;
-        document.getElementById('reelResult').classList.remove('hidden');
-      }
-    });
-
-    // Public media extractor (yt-dlp scan)
-    let extractAllVideos = [];
-    document.getElementById('extractBtn').addEventListener('click', async () => {
-      const url = document.getElementById('extractUrl').value.trim();
-      if (!url) return;
-      document.getElementById('extractResult').classList.add('hidden');
-      document.getElementById('extractError').classList.add('hidden');
-      document.getElementById('extractLoading').classList.remove('hidden');
-      try {
-        const res = await fetch('/api/scan-page', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        extractAllVideos = data.videos || [];
-        addHistory('extract', `Scanned ${url}`);
-        renderExtractResults();
-      } catch (e) {
-        document.getElementById('extractError').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${e.message}`;
-        document.getElementById('extractError').classList.remove('hidden');
-        addHistory('extract_error', e.message);
-      } finally {
-        document.getElementById('extractLoading').classList.add('hidden');
-      }
-    });
-
-    // Filter and render extract results
-    let extractFilter = '';
-    document.getElementById('filterInput').addEventListener('input', (e) => {
-      extractFilter = e.target.value.toLowerCase();
-      renderExtractResults();
-    });
-
-    function renderExtractResults() {
-      const filtered = extractAllVideos.filter(v => 
-        v.title.toLowerCase().includes(extractFilter) || 
-        (v.is_reel ? 'reel' : 'video').includes(extractFilter)
-      );
-      document.getElementById('videoList').innerHTML = filtered.map(v => `
-        <div class="video-card" style="justify-content:space-between; flex-wrap:wrap;">
-          <img src="${v.thumbnail || 'https://via.placeholder.com/60?text=No+Img'}" alt="thumb">
-          <div style="flex:1">
-            <strong>${v.title}</strong><br>
-            <small>${v.is_reel ? '🎞️ Reel' : '📹 Video'} · ${v.duration ? Math.floor(v.duration/60)+':'+(v.duration%60).toString().padStart(2,'0') : 'N/A'}</small>
-          </div>
-          <div>
-            <button onclick="copyText('${v.url}')" class="btn-outline btn-sm">Copy</button>
-            <button onclick="downloadVideo('${v.url}')" class="btn-primary btn-sm">Download</button>
-          </div>
-        </div>
-      `).join('');
-      document.getElementById('extractResult').classList.remove('hidden');
-    }
-
-    document.getElementById('copyAllLinks').addEventListener('click', () => {
-      const links = extractAllVideos.map(v => v.url).join('\n');
-      copyText(links);
-    });
-
-    window.downloadVideo = async (videoUrl) => {
-      try {
-        const res = await fetch('/api/extract', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: videoUrl })
-        });
-        const info = await res.json();
-        if (!res.ok) throw new Error(info.error);
-        const dur = info.duration;
-        const mins = Math.floor(dur / 60);
-        const secs = Math.floor(dur % 60);
-        const modal = document.createElement('div');
-        modal.style.position = 'fixed'; modal.style.top = '0'; modal.style.left = '0';
-        modal.style.width = '100%'; modal.style.height = '100%';
-        modal.style.background = 'rgba(0,0,0,0.7)'; modal.style.display = 'flex';
-        modal.style.alignItems = 'center'; modal.style.justifyContent = 'center';
-        modal.style.zIndex = '1000';
-        modal.innerHTML = `
-          <div class="card" style="max-width:600px; max-height:80vh; overflow-y:auto;">
-            <div class="thumbnail-wrap"><img src="${info.thumbnail}" style="width:100%; border-radius:12px;">
-              <span class="duration-badge">${dur ? `${mins}:${secs.toString().padStart(2,'0')}` : ''}</span>
-            </div>
-            <h3>${info.title || 'Untitled'}</h3>
-            <p>${info.view_count?.toLocaleString() || 'N/A'} views · ${info.upload_date || 'Unknown date'}</p>
-            <p>${info.caption || ''}</p>
-            <div>${(info.hashtags||[]).map(t => `<span class="status-badge" style="margin:0.2rem;">#${t}</span>`).join('')}</div>
-            <div style="display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap;">
-              ${info.hd_url ? `<a href="${info.hd_url}" target="_blank" class="btn btn-primary"><i class="fas fa-cloud-download-alt"></i> HD Download</a>` : ''}
-              ${info.sd_url ? `<a href="${info.sd_url}" target="_blank" class="btn btn-outline"><i class="fas fa-download"></i> SD Download</a>` : ''}
-              <button class="btn btn-outline" onclick="navigator.clipboard.writeText('${info.hd_url || info.sd_url}')"><i class="fas fa-copy"></i> Copy Link</button>
-            </div>
-            <button class="btn btn-danger" style="margin-top:1rem;" onclick="this.closest('div').parentElement.remove()">Close</button>
-          </div>`;
-        document.body.appendChild(modal);
-      } catch (e) { showToast(e.message, '#ff4d4d'); }
-    };
-
-    // History & dashboard
-    function addHistory(action, details) {
-      history.unshift({ action, details, timestamp: new Date().toISOString() });
-      if (history.length > 100) history.pop();
-      localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(history));
-      updateDashboard();
-    }
-
-    function updateDashboard() {
-      const total = history.length;
-      const success = history.filter(h => !h.action.includes('error')).length;
-      const errors = total - success;
-      const uploads = history.filter(h => h.action.includes('reel_upload')).length;
-      document.getElementById('totalRequests').textContent = total;
-      document.getElementById('totalUploads').textContent = uploads;
-      document.getElementById('totalSuccess').textContent = success;
-      document.getElementById('totalErrors').textContent = errors;
-
-      document.getElementById('recentActions').innerHTML = history.slice(0, 10).map(h => `
-        <div style="padding:0.5rem; border-bottom:1px solid var(--border);">
-          <strong>${h.action}</strong> - ${h.details} <small>${new Date(h.timestamp).toLocaleString()}</small>
-        </div>`).join('') || '<p>No actions yet.</p>';
-
-      const ctx = document.getElementById('activityChart')?.getContext('2d');
-      if (ctx) {
-        if (window.chartInstance) window.chartInstance.destroy();
-        const last7 = [];
-        for (let i=6; i>=0; i--) {
-          const d = new Date(); d.setDate(d.getDate()-i);
-          const dateStr = d.toISOString().split('T')[0];
-          const count = history.filter(h => h.timestamp.startsWith(dateStr)).length;
-          last7.push({date: dateStr, count});
+        // Multi Account Management
+        function renderMultiAccounts() {
+            const container = document.getElementById('multiAccountList');
+            container.innerHTML = activeAccounts.map((acc, idx) => `<div class="glass-card px-3 py-1 flex gap-2 items-center"><i class="fas fa-user-circle"></i>${acc.name}<button class="text-xs text-blue-400 switchAccBtn" data-token="${acc.token}">Switch</button><button class="text-xs text-red-400 removeAccBtn" data-idx="${idx}">x</button></div>`).join('');
+            document.querySelectorAll('.switchAccBtn').forEach(btn => btn.addEventListener('click', () => { userTokenInput.value = btn.dataset.token; localStorage.setItem('fb_active_token', btn.dataset.token); checkTokenHealth(btn.dataset.token); fetchProfile(btn.dataset.token); fetchUserPages(btn.dataset.token); addActivity(`Switched to account`); }));
+            document.querySelectorAll('.removeAccBtn').forEach(btn => btn.addEventListener('click', () => { activeAccounts.splice(btn.dataset.idx, 1); localStorage.setItem('xiya_accounts', JSON.stringify(activeAccounts)); renderMultiAccounts(); }));
         }
-        window.chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: last7.map(d=>d.date),
-            datasets: [{
-              label: 'Actions per day',
-              data: last7.map(d=>d.count),
-              borderColor: '#1877F2',
-              backgroundColor: 'rgba(24,119,242,0.1)',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: { responsive: true, plugins: { legend: { display: false } } }
-        });
-      }
-    }
+        addAccountBtn.onclick = () => { let name = prompt('Account nickname'); let tok = prompt('Enter Access Token'); if (tok && name) { activeAccounts.push({ name, token: tok }); localStorage.setItem('xiya_accounts', JSON.stringify(activeAccounts)); renderMultiAccounts(); addActivity(`Added account: ${name}`); } };
 
-    // Theme toggle
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = themeToggle.querySelector('i');
-    function setTheme(dark) {
-      document.body.classList.toggle('dark', dark);
-      themeIcon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
-      localStorage.setItem(STORAGE_KEYS.theme, dark ? 'dark' : 'light');
-    }
-    themeToggle.addEventListener('click', () => setTheme(!document.body.classList.contains('dark')));
-    if (localStorage.getItem(STORAGE_KEYS.theme) === 'dark') setTheme(true);
+        // Facebook OAuth using manual App ID
+        function fbLoginWithApp() {
+            const appId = appIdInput.value.trim();
+            if (!appId) { showToast('Please enter App ID in settings', 'error'); return; }
+            if (window.FB) { FB.init({ appId, version: 'v19.0' }); doLogin(); return; }
+            window.fbAsyncInit = function () { FB.init({ appId, version: 'v19.0' }); doLogin(); };
+            if (!document.getElementById('fb-sdk')) { let js = document.createElement('script'); js.id = 'fb-sdk'; js.src = 'https://connect.facebook.net/en_US/sdk.js'; document.head.append(js); }
+            else doLogin();
+            function doLogin() { FB.login(res => { if (res.authResponse) { const token = res.authResponse.accessToken; localStorage.setItem('fb_active_token', token); userTokenInput.value = token; checkTokenHealth(token); fetchProfile(token); fetchUserPages(token); addActivity('Facebook login success'); showToast('Connected to Facebook'); } else showToast('Login failed', 'error'); }, { scope: 'pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts' }); }
+        }
+        connectBtn.onclick = fbLoginWithApp;
+        saveCredBtn.onclick = () => { localStorage.setItem('fb_app_id', appIdInput.value); localStorage.setItem('fb_app_secret', appSecretInput.value); showToast('App credentials saved'); addActivity('App ID/Secret saved'); };
 
-    // Init
-    handleOAuth();
-    updateDashboard();
-  </script>
+        // Profile & Pages
+        async function fetchProfile(token) {
+            if (!token) return;
+            try {
+                const res = await fetch(`https://graph.facebook.com/me?fields=name,id,picture.width(150)&access_token=${token}`);
+                addApiCall();
+                const data = await res.json();
+                if (data.name) { profileNameSpan.innerText = data.name; fbIdSpan.innerText = data.id; if (data.picture) profilePicDiv.innerHTML = `<img src="${data.picture.data.url}" class="w-full h-full object-cover">`; }
+            } catch (e) { addActivity('Profile fetch error', 'error'); }
+        }
+        async function fetchUserPages(token) {
+            if (!token) return;
+            const res = await fetch(`https://graph.facebook.com/me/accounts?fields=name,picture,followers_count,access_token,id&access_token=${token}`);
+            addApiCall();
+            const json = await res.json();
+            const pages = json.data || [];
+            if (!pages.length) pagesDiv.innerHTML = '<div class="text-sm">No pages managed (need admin rights)</div>';
+            else pagesDiv.innerHTML = pages.map(p => `<div class="glass-card p-2 flex gap-3 items-center cursor-pointer pageItem" data-pageid="${p.id}" data-pagetoken="${p.access_token}"><img src="${p.picture?.data?.url || 'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full"><div><b>${p.name}</b><div class="text-xs">📈 followers: ${p.followers_count || 0}</div></div></div>`).join('');
+            document.querySelectorAll('.pageItem').forEach(el => { el.addEventListener('click', () => { currentPageId = el.dataset.pageid; currentPageToken = el.dataset.pagetoken; activePageInfo.innerText = `✅ Active: ${el.querySelector('b')?.innerText}`; fetchPageVideos(currentPageId, currentPageToken, true); addActivity(`Selected page: ${el.querySelector('b')?.innerText}`); }); });
+        }
+        refreshPagesBtn.onclick = () => { const token = userTokenInput.value; if (token) { fetchUserPages(token); fetchProfile(token); } else showToast('No user token', 'error'); };
+
+        // Fetch Videos/Reels with Pagination
+        async function fetchPageVideos(pageId, token, reset = true) {
+            if (!pageId || !token) return;
+            if (reset) { allMedia = []; nextCursor = null; }
+            mediaGrid.innerHTML = '<div class="col-span-full flex justify-center"><div class="loader"></div></div>';
+            let url = `https://graph.facebook.com/v19.0/${pageId}/videos?fields=id,title,description,permalink,created_time,thumbnail_url,views,length,comments.summary(true),reactions.summary(true)&limit=20`;
+            if (nextCursor && !reset) url += `&after=${nextCursor}`;
+            try {
+                const res = await fetch(`${url}&access_token=${token}`);
+                addApiCall();
+                const data = await res.json();
+                if (data.error) throw new Error(data.error.message);
+                const videos = data.data || [];
+                const enriched = videos.map(v => ({ ...v, is_reel: (v.title?.toLowerCase().includes('reel') || v.length < 90 || v.permalink?.includes('/reel/')), reactions_count: v.reactions?.summary?.total_count || 0, comments_count: v.comments?.summary?.total_count || 0 }));
+                allMedia = reset ? enriched : [...allMedia, ...enriched];
+                nextCursor = data.paging?.cursors?.after || null;
+                renderMediaGallery();
+                updateStatisticsAndChart();
+                if (nextCursor) loadMoreBtn.classList.remove('hidden'); else loadMoreBtn.classList.add('hidden');
+                addActivity(`Loaded ${enriched.length} media items`);
+            } catch (e) { mediaGrid.innerHTML = `<div class="col-span-full text-red-400">Error: ${e.message}</div>`; addActivity(`Video fetch error: ${e.message}`, 'error'); }
+        }
+        function renderMediaGallery() {
+            let filtered = [...allMedia];
+            if (searchInput.value) filtered = filtered.filter(m => (m.title || '').toLowerCase().includes(searchInput.value.toLowerCase()) || (m.description || '').toLowerCase().includes(searchInput.value.toLowerCase()));
+            if (filterSelect.value === 'reel') filtered = filtered.filter(m => m.is_reel);
+            if (filterSelect.value === 'video') filtered = filtered.filter(m => !m.is_reel);
+            if (sortSelect.value === 'views') filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+            else filtered.sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+            mediaGrid.innerHTML = filtered.map(m => `<div class="media-card p-3"><div class="relative"><img src="${m.thumbnail_url || 'https://via.placeholder.com/300x180?text=No+thumb'}" class="w-full h-44 object-cover rounded-xl"><span class="absolute top-2 left-2 bg-black/60 text-xs px-2 rounded-full">${m.is_reel ? '🎬 REEL' : '📽️ VIDEO'}</span><span class="absolute bottom-2 right-2 bg-black/60 text-xs px-2 rounded">👁️ ${(m.views || 0).toLocaleString()}</span></div><div class="mt-2"><div class="font-bold truncate">${m.title || 'Untitled'}</div><div class="flex justify-between text-xs mt-1"><span><i class="far fa-heart"></i> ${m.reactions_count || 0}</span><span><i class="far fa-comment"></i> ${m.comments_count || 0}</span><span>📅 ${new Date(m.created_time).toLocaleDateString()}</span></div><div class="flex gap-2 mt-2"><button class="text-blue-500 text-sm copyLinkBtn" data-link="${m.permalink}"><i class="fas fa-copy"></i> Copy Link</button><button class="text-green-500 text-sm previewBtn" data-video="${m.permalink}"><i class="fas fa-play-circle"></i> Preview</button></div></div></div>`).join('');
+            document.querySelectorAll('.copyLinkBtn').forEach(btn => btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.dataset.link); showToast('Link copied'); }));
+            document.querySelectorAll('.previewBtn').forEach(btn => btn.addEventListener('click', () => { document.getElementById('previewVideo').src = btn.dataset.video; document.getElementById('previewModal').classList.remove('hidden'); }));
+        }
+        function updateStatisticsAndChart() {
+            const total = allMedia.length;
+            const totalViewSum = allMedia.reduce((s, v) => s + (v.views || 0), 0);
+            const today = new Date().toISOString().slice(0, 10);
+            const todayUploads = allMedia.filter(m => m.created_time?.startsWith(today)).length;
+            totalVideosSpan.innerText = total; totalViewsSpan.innerText = totalViewSum.toLocaleString(); uploadsTodaySpan.innerText = todayUploads;
+            // Update chart (last 7 days uploads)
+            const last7 = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0, 10); }).reverse();
+            const counts = last7.map(date => allMedia.filter(v => v.created_time?.startsWith(date)).length);
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('uploadChart').getContext('2d');
+            chartInstance = new Chart(ctx, { type: 'bar', data: { labels: last7.map(d => d.slice(5)), datasets: [{ label: 'Uploads', data: counts, backgroundColor: '#1877f2', borderRadius: 8 }] } });
+        }
+        loadMoreBtn.onclick = () => { if (nextCursor && currentPageId && currentPageToken) fetchPageVideos(currentPageId, currentPageToken, false); };
+
+        // AI Caption
+        genCaptionBtn.onclick = () => { const style = document.getElementById('aiStyleSelect').value; const dict = { viral: "🔥 This reel is pure FIRE! Double tap & share! #viral #reels", business: "📈 Business insight you can't miss. Watch till the end! #growth", funny: "😂 I'm dying 🤣 Tag someone who needs this laugh!", motivation: "💪 Every day is a new opportunity. Keep going! #motivation" }; const caption = dict[style] || dict.viral; navigator.clipboard.writeText(caption); showToast(`AI Caption copied: ${caption.substring(0, 50)}...`); addActivity('AI caption generated'); };
+
+        // Bulk Publisher
+        let bulkQueue = [];
+        openBulkModal.onclick = () => document.getElementById('bulkModal').classList.remove('hidden');
+        closeBulk.onclick = () => document.getElementById('bulkModal').classList.add('hidden');
+        bulkFileInput.onchange = (e) => { bulkQueue = Array.from(e.target.files); document.getElementById('queueList').innerHTML = bulkQueue.map(f => `<div>${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)</div>`).join(''); };
+        async function publishSingleReel(pageId, token, file, title) { let fd = new FormData(); fd.append('source', file); fd.append('title', title || 'XIYAD Reel'); let res = await fetch(`https://graph.facebook.com/v19.0/${pageId}/videos?access_token=${token}`, { method: 'POST', body: fd }); addApiCall(); return await res.json(); }
+        startBulkUpload.onclick = async () => { if (!currentPageId || !currentPageToken) { showToast('Select a page first', 'error'); return; } if (!bulkQueue.length) return; const progressDiv = document.getElementById('bulkProgress'); for (let i = 0; i < bulkQueue.length; i++) { progressDiv.innerText = `Uploading ${i + 1}/${bulkQueue.length}: ${bulkQueue[i].name}`; try { const result = await publishSingleReel(currentPageId, currentPageToken, bulkQueue[i], `Bulk reel ${i + 1}`); if (result.id) { showToast(`Published: ${result.id}`); addActivity(`Bulk published: ${result.id}`); } else showToast(`Failed: ${result.error?.message}`, 'error'); } catch (e) { showToast('Upload error', 'error'); } await new Promise(r => setTimeout(r, 1200)); } progressDiv.innerText = 'Bulk upload completed!'; fetchPageVideos(currentPageId, currentPageToken, true); };
+
+        // Export CSV
+        exportBtn.onclick = () => { const rows = [["Title", "Permalink", "Views", "Date", "Type"]]; allMedia.forEach(m => { rows.push([m.title || "", m.permalink || "", m.views || "", m.created_time || "", m.is_reel ? "Reel" : "Video"]); }); const csv = rows.map(r => r.join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "xiya_media_export.csv"; a.click(); showToast('CSV exported'); addActivity('Exported CSV'); };
+
+        // Search & Filter listeners
+        searchInput.addEventListener('input', () => renderMediaGallery());
+        filterSelect.addEventListener('change', () => renderMediaGallery());
+        sortSelect.addEventListener('change', () => renderMediaGallery());
+        document.getElementById('closePreview').onclick = () => { document.getElementById('previewModal').classList.add('hidden'); document.getElementById('previewVideo').pause(); };
+        resetBtn.onclick = () => { localStorage.clear(); location.reload(); };
+        themeToggle.onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); };
+
+        // Initial Load
+        function init() {
+            appIdInput.value = localStorage.getItem('fb_app_id') || '';
+            appSecretInput.value = localStorage.getItem('fb_app_secret') || '';
+            userTokenInput.value = localStorage.getItem('fb_active_token') || '';
+            try { activeAccounts = JSON.parse(localStorage.getItem('xiya_accounts') || '[]'); } catch (e) { activeAccounts = []; }
+            renderMultiAccounts();
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+            updateApiCallUI(); function updateApiCallUI() { apiCallCount = parseInt(localStorage.getItem('api_calls') || '0'); apiHitsSpan.innerText = apiCallCount; }
+            if (userTokenInput.value) { checkTokenHealth(userTokenInput.value); fetchProfile(userTokenInput.value); fetchUserPages(userTokenInput.value); }
+            addActivity('Dashboard ready — A to Z features loaded');
+        }
+        init();
+    </script>
 </body>
 </html>
