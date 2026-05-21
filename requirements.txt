@@ -1,5 +1,4 @@
-flask==3.0.0
-flask-limiter==3.3.1
-yt-dlp==2024.8.6
-cryptography==41.0.7
-gunicorn==21.2.0
+flask
+flask_cors
+requests
+gunicorn
