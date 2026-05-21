@@ -1,209 +1,194 @@
-import os, re, requests
-from urllib.parse import urlparse, parse_qs
-from flask import Flask, request, jsonify, render_template
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+import os
+import requests
+import json
+from flask import Flask, request, jsonify, send_from_directory, session
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
-import yt_dlp
+import logging
+from datetime import datetime
+import time
 
-app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'xiyad-media-pro-secret')
-limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])
+app = Flask(__name__, static_folder='static', static_url_path='/static')
+app.secret_key = os.environ.get('SECRET_KEY', 'xiya-super-secret-key-change-in-production')
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-def is_facebook_url(url: str) -> bool:
-    return "facebook.com" in url.lower() or "fb.watch" in url.lower()
+# Configuration
+UPLOAD_FOLDER = '/tmp/uploads' if not os.path.exists('/tmp') else './uploads'
+ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'mkv', 'webm'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 
-def classify_url(url: str):
-    if any(x in url.lower() for x in ["/reel/", "/watch?", "/videos/", "fb.watch"]):
-        return "video"
-    if "facebook.com" in url.lower():
-        return "page"
-    return None
+# Simple in-memory analytics (for demo, use Redis/DB in production)
+analytics = {
+    'api_calls': 0,
+    'publish_attempts': 0,
+    'total_reels_published': 0,
+    'errors': [],
+    'last_activity': None
+}
 
-def scan_page_videos_yt(url: str) -> list:
-    parsed = urlparse(url)
-    if 'profile.php' in parsed.path:
-        qs = parse_qs(parsed.query)
-        profile_id = qs.get('id', [None])[0]
-        if not profile_id:
-            raise ValueError("Could not extract profile ID")
-        videos_url = f"https://www.facebook.com/profile.php?id={profile_id}&sk=videos"
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def log_api_call(endpoint):
+    analytics['api_calls'] += 1
+    analytics['last_activity'] = datetime.now().isoformat()
+
+def log_error(error_msg):
+    analytics['errors'].append({
+        'time': datetime.now().isoformat(),
+        'message': error_msg
+    })
+    if len(analytics['errors']) > 50:
+        analytics['errors'] = analytics['errors'][-50:]
+
+# ---------- Proxy Helper ----------
+def graph_proxy(endpoint, access_token, method='GET', data=None, files=None):
+    """Forward request to Facebook Graph API"""
+    url = f"https://graph.facebook.com/{endpoint}"
+    params = {'access_token': access_token}
+    if method == 'GET':
+        response = requests.get(url, params=params)
+    elif method == 'POST':
+        if files:
+            # Multipart form for file upload
+            response = requests.post(url, data=data, files=files, params=params)
+        else:
+            response = requests.post(url, json=data, params=params)
     else:
-        if not url.endswith('/videos'):
-            url = url.rstrip('/') + '/videos'
-        videos_url = url
+        return None
+    log_api_call(endpoint)
+    return response
 
-    ydl_opts = {
-        'quiet': True, 'no_warnings': True, 'extract_flat': True,
-        'skip_download': True, 'force_generic_extractor': False, 'playlistend': 200,
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(videos_url, download=False)
+# ---------- Routes ----------
 
-    entries = info.get('entries') or []
-    videos = []
-    for entry in entries:
-        if not entry:
-            continue
-        vid_id = entry.get('id')
-        vid_url = f"https://www.facebook.com/watch?v={vid_id}" if vid_id else entry.get('url', '')
-        is_reel = '/reel/' in (entry.get('url') or '')
-        videos.append({
-            'id': vid_id or entry.get('id'),
-            'title': entry.get('title', 'Untitled'),
-            'thumbnail': entry.get('thumbnail', ''),
-            'duration': entry.get('duration', 0),
-            'url': vid_url,
-            'is_reel': is_reel,
-        })
-    return videos
-
-def extract_single_video(url: str) -> dict:
-    ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': False, 'skip_download': True}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-
-    formats = info.get('formats', [])
-    hd_url = sd_url = None
-    for fmt in formats:
-        if fmt.get('acodec') != 'none' and fmt.get('vcodec') != 'none':
-            height = fmt.get('height', 0) or 0
-            if height >= 720 and not hd_url:
-                hd_url = fmt['url']
-            elif height > 0 and height < 720 and not sd_url:
-                sd_url = fmt['url']
-    if not hd_url:
-        for fmt in formats:
-            if fmt.get('format_id') == 'hd' and fmt.get('url'):
-                hd_url = fmt['url']; break
-    if not sd_url:
-        for fmt in formats:
-            if fmt.get('format_id') == 'sd' and fmt.get('url'):
-                sd_url = fmt['url']; break
-
-    description = info.get('description') or ''
-    hashtags = list(set(re.findall(r'#(\w+)', description)))
-    return {
-        'id': info.get('id'), 'title': info.get('title', ''),
-        'thumbnail': info.get('thumbnail', ''),
-        'duration': info.get('duration', 0),
-        'hd_url': hd_url, 'sd_url': sd_url,
-        'caption': description, 'hashtags': hashtags,
-        'upload_date': info.get('upload_date', ''),
-        'view_count': info.get('view_count', 0),
-        'like_count': info.get('like_count', 0),
-    }
-
+# Serve the main dashboard HTML (embed or static)
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-@app.route('/api/scan-page', methods=['POST'])
-@limiter.limit("5 per minute")
-def scan_page():
-    data = request.get_json()
-    url = data.get('url', '').strip()
-    if not url or not is_facebook_url(url):
-        return jsonify({'error': 'Invalid Facebook URL'}), 400
+    # You can also serve an external index.html file from 'static' folder
+    # For simplicity, redirect to static file if exists, else return built-in HTML
     try:
-        videos = scan_page_videos_yt(url)
-        total_videos = len(videos)
-        reels = [v for v in videos if v['is_reel']]
-        return jsonify({
-            'total_videos': total_videos,
-            'total_reels': len(reels),
-            'videos': videos,
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return send_from_directory('static', 'index.html')
+    except:
+        # Fallback: return the complete HTML from previous step (embedded)
+        return get_dashboard_html()
 
-@app.route('/api/extract', methods=['POST'])
-@limiter.limit("10 per minute")
-def extract():
-    data = request.get_json()
-    url = data.get('url', '').strip()
-    if not url or not is_facebook_url(url):
-        return jsonify({'error': 'Invalid Facebook URL'}), 400
-    try:
-        result = extract_single_video(url)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# API: Get user profile
+@app.route('/api/me', methods=['GET'])
+def get_me():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'No access token provided'}), 401
+    resp = graph_proxy('me?fields=id,name,picture.width(200).height(200)', token)
+    if resp and resp.status_code == 200:
+        return jsonify(resp.json())
+    return jsonify({'error': 'Failed to fetch profile'}), resp.status_code if resp else 500
 
-@app.route('/api/upload-reel', methods=['POST'])
-@limiter.limit("2 per minute")
-def upload_reel():
-    page_token = request.form.get('page_token')
-    title = request.form.get('title', '')
+# API: Get user's managed pages
+@app.route('/api/pages', methods=['GET'])
+def get_pages():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Token required'}), 401
+    resp = graph_proxy('me/accounts?fields=id,name,picture,followers_count,access_token', token)
+    if resp and resp.status_code == 200:
+        return jsonify(resp.json())
+    return jsonify({'error': 'Failed to fetch pages'}), resp.status_code if resp else 500
+
+# API: Get videos from a specific page (with pagination)
+@app.route('/api/pages/<page_id>/videos', methods=['GET'])
+def get_page_videos(page_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Token required'}), 401
+    after = request.args.get('after', '')
+    limit = request.args.get('limit', 20)
+    fields = 'id,title,description,permalink,created_time,thumbnail_url,views,length,comments.summary(true),reactions.summary(true)'
+    endpoint = f"{page_id}/videos?fields={fields}&limit={limit}"
+    if after:
+        endpoint += f"&after={after}"
+    resp = graph_proxy(endpoint, token)
+    if resp and resp.status_code == 200:
+        return jsonify(resp.json())
+    return jsonify({'error': 'Failed to fetch videos'}), resp.status_code if resp else 500
+
+# API: Publish a reel (video upload)
+@app.route('/api/publish', methods=['POST'])
+def publish_reel():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Token required'}), 401
+    page_id = request.form.get('page_id')
+    if not page_id:
+        return jsonify({'error': 'page_id required'}), 400
+    title = request.form.get('title', 'XIYAD Reel')
     description = request.form.get('description', '')
-    schedule_time = request.form.get('schedule_time', '')
-    publish_mode = request.form.get('publish_mode', 'PUBLISH_NOW')
-    file = request.files.get('video_file')
+    file = request.files.get('video')
+    if not file or not allowed_file(file.filename):
+        return jsonify({'error': 'Valid video file required (mp4/mov/avi/mkv/webm)'}), 400
 
-    if not page_token or not file:
-        return jsonify({'error': 'Missing page token or video file'}), 400
-
-    filename = secure_filename(file.filename)
-    filepath = os.path.join('/tmp', filename)
+    # Save file temporarily
+    filename = secure_filename(f"{int(time.time())}_{file.filename}")
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
-    file_size = os.path.getsize(filepath)
 
+    analytics['publish_attempts'] += 1
     try:
-        # 1. Init upload session
-        init_url = "https://graph.facebook.com/v20.0/me/video_reels"
-        params = {
-            'access_token': page_token,
-            'upload_phase': 'start',
-            'file_size': file_size,
-        }
-        if publish_mode == 'SCHEDULED' and schedule_time:
-            params['scheduled_publish_time'] = schedule_time
-        init_resp = requests.post(init_url, params=params)
-        init_data = init_resp.json()
-        if 'error' in init_data:
-            raise Exception(init_data['error']['message'])
-
-        video_id = init_data.get('video_id')
-        upload_url = init_data.get('upload_url')
-
-        # 2. Upload
+        # Step 1: Initialize upload session (for large files) or direct POST
+        # Using direct POST to page/videos endpoint (simpler)
         with open(filepath, 'rb') as f:
-            upload_resp = requests.post(upload_url, headers={
-                'Authorization': f'OAuth {page_token}',
-                'offset': '0',
-                'file_size': str(file_size),
-                'Content-Type': 'application/octet-stream',
-            }, data=f)
-        if upload_resp.status_code != 200:
-            raise Exception(f"Upload failed: {upload_resp.text}")
-
-        # 3. Finish
-        finish_url = "https://graph.facebook.com/v20.0/me/video_reels"
-        finish_params = {
-            'access_token': page_token,
-            'upload_phase': 'finish',
-            'video_id': video_id,
-            'title': title,
-            'description': description,
-            'video_state': publish_mode,
-        }
-        if publish_mode == 'SCHEDULED' and schedule_time:
-            finish_params['scheduled_publish_time'] = schedule_time
-        finish_resp = requests.post(finish_url, params=finish_params)
-        finish_data = finish_resp.json()
-        if 'error' in finish_data:
-            raise Exception(finish_data['error']['message'])
-
+            files = {'source': (filename, f, 'video/mp4')}
+            data = {
+                'title': title,
+                'description': description,
+                'published': 'true'
+            }
+            endpoint = f"{page_id}/videos"
+            resp = graph_proxy(endpoint, token, method='POST', data=data, files=files)
         os.remove(filepath)
-        return jsonify({
-            'success': True,
-            'video_id': finish_data.get('id'),
-            'status': finish_data.get('status', 'published'),
-        })
+        if resp and resp.status_code == 200:
+            analytics['total_reels_published'] += 1
+            return jsonify(resp.json())
+        else:
+            error_msg = resp.json().get('error', {}).get('message', 'Unknown error') if resp else 'No response'
+            log_error(f"Publish failed: {error_msg}")
+            return jsonify({'error': error_msg}), resp.status_code if resp else 500
     except Exception as e:
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        log_error(str(e))
         return jsonify({'error': str(e)}), 500
 
+# API: Get analytics dashboard data
+@app.route('/api/analytics', methods=['GET'])
+def get_analytics():
+    return jsonify(analytics)
+
+# API: Clear analytics (optional)
+@app.route('/api/analytics/clear', methods=['POST'])
+def clear_analytics():
+    analytics['api_calls'] = 0
+    analytics['publish_attempts'] = 0
+    analytics['total_reels_published'] = 0
+    analytics['errors'] = []
+    analytics['last_activity'] = None
+    return jsonify({'status': 'cleared'})
+
+# Health check
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok', 'timestamp': datetime.now().isoformat()})
+
+# ---------- Embedded HTML (fallback) ----------
+def get_dashboard_html():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head><title>XIYAD Media Pro Backend</title><style>body{font-family:sans-serif;text-align:center;padding:50px;}</style></head>
+    <body><h1>XIYAD Facebook Media Pro API</h1><p>Backend is running. Serve your frontend separately or place index.html in /static folder.</p><p>Endpoints: /api/me, /api/pages, /api/pages/&lt;page_id&gt;/videos, /api/publish, /api/analytics</p></body>
+    </html>
+    """
+
+# ---------- Run Server ----------
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
