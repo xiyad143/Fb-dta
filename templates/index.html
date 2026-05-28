@@ -3,345 +3,539 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XMedia Pro - Facebook Reel Automation</title>
-  <!-- Tailwind CSS CDN -->
+  <title>XMedia Pro – Multi-Page Auto Publisher</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
-    .sidebar { transition: all 0.3s; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .glass-card:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,0,0,0.1); }
+    .dark-mode .glass-card {
+      background: rgba(30, 30, 40, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sidebar-item { transition: all 0.2s; }
+    .sidebar-item:hover, .sidebar-item.active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border: none; color: white; padding: 0.625rem 1.25rem; border-radius: 9999px;
+      font-weight: 600; transition: opacity 0.2s; cursor: pointer;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline {
+      border: 2px solid #3b82f6; color: #3b82f6; background: transparent;
+      padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 600;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .btn-outline:hover { background: #3b82f6; color: white; }
+    .toast {
+      position: fixed; bottom: 1rem; right: 1rem; padding: 1rem 1.5rem;
+      border-radius: 12px; color: white; font-weight: 600; z-index: 9999;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); opacity:0; } to { transform: translateY(0); opacity:1; } }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .card-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .dark-mode { background: #111827; color: #f9fafb; }
+    .dark-mode .bg-white { background: #1f2937 !important; }
+    .dark-mode .text-gray-700 { color: #d1d5db !important; }
+    .dark-mode .text-gray-500 { color: #9ca3af !important; }
+    .dark-mode .border { border-color: #374151 !important; }
+    .media-card video { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; }
   </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" id="app-body">
 
 <!-- Landing Page -->
 <div id="landing-page" class="min-h-screen">
-  <!-- Header -->
   <header class="bg-white shadow-sm fixed w-full z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-2">
         <i class="fab fa-facebook text-blue-600 text-3xl"></i>
         <span class="text-2xl font-bold text-gray-800">XMedia Pro</span>
       </div>
-      <button onclick="navigate('dashboard')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-semibold transition">
+      <button onclick="navigate('dashboard')" class="btn-primary">
         Launch Dashboard <i class="fas fa-arrow-right ml-2"></i>
       </button>
     </div>
   </header>
-
-  <!-- Hero -->
   <section class="pt-24 pb-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
     <div class="max-w-7xl mx-auto px-4 text-center">
-      <h1 class="text-5xl font-extrabold mb-4">Facebook Reel Automation,<br>Powered by AI</h1>
-      <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">Schedule, publish, and analyze your Facebook Reels with AI‑generated captions and hashtags. No technical skills required.</p>
-      <button onclick="navigate('dashboard')" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold text-lg shadow hover:shadow-lg transition">
-        Get Started Free
-      </button>
+      <h1 class="text-5xl font-extrabold mb-4">Multi-Page Facebook Auto Publisher</h1>
+      <p class="text-xl text-blue-100 mb-8">Schedule & auto-publish Reels to multiple pages at exact times. Built-in AI captions, analytics, and browser media library.</p>
+      <button onclick="navigate('dashboard')" class="bg-white text-blue-600 px-8 py-3 rounded-full font-bold text-lg shadow hover:shadow-lg transition">Start Free</button>
     </div>
   </section>
-
-  <!-- Features -->
-  <section class="py-16 bg-white">
-    <div class="max-w-7xl mx-auto px-4">
-      <h2 class="text-3xl font-bold text-center mb-12">Everything you need to scale your Reels</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="p-6 rounded-xl shadow hover:shadow-lg transition">
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4"><i class="fas fa-robot text-xl"></i></div>
-          <h3 class="text-xl font-semibold mb-2">AI Caption & Hashtags</h3>
-          <p class="text-gray-600">Generate creative, engaging captions and trending hashtags from a simple description.</p>
-        </div>
-        <div class="p-6 rounded-xl shadow hover:shadow-lg transition">
-          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-4"><i class="fas fa-calendar-alt text-xl"></i></div>
-          <h3 class="text-xl font-semibold mb-2">Smart Scheduling</h3>
-          <p class="text-gray-600">Upload once, then publish immediately or schedule for the perfect time.</p>
-        </div>
-        <div class="p-6 rounded-xl shadow hover:shadow-lg transition">
-          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4"><i class="fas fa-chart-line text-xl"></i></div>
-          <h3 class="text-xl font-semibold mb-2">Real Analytics</h3>
-          <p class="text-gray-600">Track reach, engagement, and video views directly from Facebook Insights.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-gray-300 py-8">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-      <p>Built by <strong>Riyad Mahfuz</strong> · riyad@example.com · +8801XXXXXXXXX</p>
-      <a href="#" class="text-blue-400 hover:underline">Facebook</a>
-    </div>
+  <footer class="bg-gray-800 text-gray-300 py-8 text-center">
+    Built by <span id="dev-name-footer">Riyad Mahfuz</span> · <span id="dev-email-footer">xiyad404@gmail.com</span>
   </footer>
 </div>
 
-<!-- Dashboard (hidden initially) -->
-<div id="dashboard-page" class="hidden min-h-screen flex">
+<!-- Dashboard -->
+<div id="dashboard-page" class="hidden flex h-screen overflow-hidden">
   <!-- Sidebar -->
-  <aside class="sidebar w-64 bg-gray-900 text-white flex-shrink-0 min-h-screen">
-    <div class="p-4">
-      <h2 class="text-xl font-bold"><i class="fab fa-facebook mr-2"></i> XMedia Pro</h2>
+  <aside class="w-64 bg-gray-900 text-white flex-shrink-0 flex flex-col">
+    <!-- User Profile Section -->
+    <div id="user-profile-sidebar" class="p-4 border-b border-gray-700 flex items-center space-x-3">
+      <img id="sidebar-user-pic" src="" alt="" class="w-10 h-10 rounded-full hidden">
+      <div>
+        <p id="sidebar-user-name" class="font-semibold text-sm">Not connected</p>
+        <p class="text-xs text-gray-400">Facebook User</p>
+      </div>
     </div>
-    <nav class="mt-8">
-      <a href="#" onclick="loadTab('overview')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-tachometer-alt"></i><span>Overview</span>
-      </a>
-      <a href="#" onclick="loadTab('pages')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-flag"></i><span>Pages</span>
-      </a>
-      <a href="#" onclick="loadTab('media')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-photo-video"></i><span>Media</span>
-      </a>
-      <a href="#" onclick="loadTab('ai')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-brain"></i><span>AI Studio</span>
-      </a>
-      <a href="#" onclick="loadTab('scheduler')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-clock"></i><span>Scheduler</span>
-      </a>
-      <a href="#" onclick="loadTab('analytics')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-chart-line"></i><span>Analytics</span>
-      </a>
-      <a href="#" onclick="loadTab('settings')" class="block py-3 px-4 hover:bg-gray-800 rounded transition flex items-center space-x-2">
-        <i class="fas fa-cog"></i><span>Settings</span>
-      </a>
+    <nav class="flex-1 mt-4 space-y-1">
+      <a href="#" onclick="loadTab('pages')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-flag w-6"></i><span>Pages</span></a>
+      <a href="#" onclick="loadTab('media')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-photo-video w-6"></i><span>Media Library</span></a>
+      <a href="#" onclick="loadTab('scheduler')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-calendar-alt w-6"></i><span>Scheduler</span></a>
+      <a href="#" onclick="loadTab('queue')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-list-ol w-6"></i><span>Queue</span></a>
+      <a href="#" onclick="loadTab('ai')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-robot w-6"></i><span>AI Studio</span></a>
+      <a href="#" onclick="loadTab('analytics')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-chart-bar w-6"></i><span>Analytics</span></a>
+      <a href="#" onclick="loadTab('settings')" class="sidebar-item flex items-center px-4 py-3 text-gray-300 hover:text-white"><i class="fas fa-cog w-6"></i><span>Settings</span></a>
     </nav>
+    <div class="p-4 border-t border-gray-700">
+      <button onclick="toggleTheme()" class="w-full bg-gray-700 px-4 py-2 rounded-lg text-sm"><i class="fas fa-moon mr-2"></i>Theme</button>
+      <button onclick="navigate('landing')" class="w-full mt-2 border border-gray-500 px-4 py-2 rounded-lg text-sm">Landing</button>
+    </div>
   </aside>
 
   <!-- Main content -->
-  <main class="flex-1 p-6 bg-gray-50 overflow-y-auto">
-    <!-- Overview Tab -->
-    <div id="tab-overview" class="tab-content active">
-      <h1 class="text-3xl font-bold mb-6">Dashboard Overview</h1>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow"><h3 class="text-gray-500 text-sm">Connected Pages</h3><p class="text-3xl font-bold" id="stat-pages">0</p></div>
-        <div class="bg-white p-6 rounded-xl shadow"><h3 class="text-gray-500 text-sm">Total Reels</h3><p class="text-3xl font-bold" id="stat-reels">0</p></div>
-        <div class="bg-white p-6 rounded-xl shadow"><h3 class="text-gray-500 text-sm">AI Generations</h3><p class="text-3xl font-bold" id="stat-ai">0</p></div>
-      </div>
-      <div class="bg-white p-6 rounded-xl shadow">
-        <h2 class="text-xl font-semibold mb-4">Your Pages</h2>
-        <button onclick="fetchPages()" class="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4">Fetch My Pages</button>
-        <div id="pages-grid-overview" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-      </div>
-    </div>
-
-    <!-- Pages Tab -->
-    <div id="tab-pages" class="tab-content">
-      <h1 class="text-3xl font-bold mb-6">Connected Pages</h1>
-      <div id="pages-grid-full" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-    </div>
-
-    <!-- Media Tab (placeholder) -->
-    <div id="tab-media" class="tab-content">
-      <h1 class="text-3xl font-bold mb-6">Media Library</h1>
-      <div class="bg-white p-12 rounded-xl shadow text-center text-gray-400">
-        <i class="fas fa-cloud-upload-alt text-6xl mb-4"></i>
-        <p>Drag & drop your video files here</p>
-        <input type="file" accept="video/*" multiple class="mt-4">
-      </div>
-    </div>
-
-    <!-- AI Studio Tab -->
-    <div id="tab-ai" class="tab-content">
-      <h1 class="text-3xl font-bold mb-6">AI Caption & Hashtag Studio</h1>
-      <div class="bg-white p-6 rounded-xl shadow">
-        <label class="block mb-2 font-medium">Video Description</label>
-        <textarea id="ai-description" rows="4" class="w-full border rounded-lg p-3 mb-4" placeholder="Describe the video content..."></textarea>
-        <button onclick="generateAI()" class="bg-purple-600 text-white px-6 py-2 rounded-lg">Generate Caption & Hashtags</button>
-        <div id="ai-output" class="mt-6 hidden">
-          <label class="block mb-1 font-medium">Caption</label>
-          <textarea id="ai-caption" rows="3" class="w-full border rounded-lg p-3 mb-4"></textarea>
-          <label class="block mb-1 font-medium">Hashtags</label>
-          <input type="text" id="ai-hashtags" class="w-full border rounded-lg p-3">
-        </div>
-      </div>
-    </div>
-
-    <!-- Scheduler Tab -->
-    <div id="tab-scheduler" class="tab-content">
-      <h1 class="text-3xl font-bold mb-6">Reel Scheduler</h1>
-      <div class="bg-white p-6 rounded-xl shadow">
-        <p>Select a page and upload a video to schedule.</p>
-        <!-- Scheduler form could be added here -->
-      </div>
-    </div>
-
-    <!-- Analytics Tab -->
-    <div id="tab-analytics" class="tab-content">
-      <h1 class="text-3xl font-bold mb-6">Analytics</h1>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white p-4 rounded-xl shadow text-center"><h3 class="text-gray-500 text-sm">Reach</h3><p class="text-2xl font-bold">0</p></div>
-        <div class="bg-white p-4 rounded-xl shadow text-center"><h3 class="text-gray-500 text-sm">Engagement</h3><p class="text-2xl font-bold">0</p></div>
-        <div class="bg-white p-4 rounded-xl shadow text-center"><h3 class="text-gray-500 text-sm">Followers</h3><p class="text-2xl font-bold">0</p></div>
-        <div class="bg-white p-4 rounded-xl shadow text-center"><h3 class="text-gray-500 text-sm">Video Views</h3><p class="text-2xl font-bold">0</p></div>
-      </div>
-      <div class="bg-white p-6 rounded-xl shadow">
-        <canvas id="analyticsChart" height="200"></canvas>
-      </div>
-    </div>
-
-    <!-- Settings Tab -->
-    <div id="tab-settings" class="tab-content">
-      <h1 class="text-3xl font-bold mb-6">Settings</h1>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Facebook Credentials -->
-        <div class="bg-white p-6 rounded-xl shadow">
-          <h2 class="text-xl font-semibold mb-4">Facebook App</h2>
-          <label class="block mb-2">App ID</label>
-          <input type="text" id="fb-app-id" class="w-full border rounded-lg p-2 mb-3" placeholder="App ID">
-          <label class="block mb-2">App Secret</label>
-          <input type="password" id="fb-app-secret" class="w-full border rounded-lg p-2 mb-4" placeholder="App Secret">
-          <button onclick="saveFacebookSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Save Credentials</button>
-          <hr class="my-4">
-          <button id="fb-connect-btn" onclick="connectFacebook()" class="bg-blue-500 text-white px-4 py-2 rounded-lg w-full">Connect Facebook</button>
-        </div>
-        <!-- Groq API Key -->
-        <div class="bg-white p-6 rounded-xl shadow">
-          <h2 class="text-xl font-semibold mb-4">Groq AI</h2>
-          <label class="block mb-2">API Key</label>
-          <input type="password" id="groq-api-key" class="w-full border rounded-lg p-2 mb-4" placeholder="Groq API key">
-          <button onclick="saveGroqKey()" class="bg-purple-600 text-white px-4 py-2 rounded-lg">Save Key</button>
-        </div>
-      </div>
-    </div>
+  <main class="flex-1 p-6 overflow-y-auto" id="main-area">
+    <div id="tab-pages" class="tab-content"></div>
+    <div id="tab-media" class="tab-content"></div>
+    <div id="tab-scheduler" class="tab-content"></div>
+    <div id="tab-queue" class="tab-content"></div>
+    <div id="tab-ai" class="tab-content"></div>
+    <div id="tab-analytics" class="tab-content"></div>
+    <div id="tab-settings" class="tab-content"></div>
   </main>
 </div>
 
+<div id="toast-container"></div>
+
 <script>
   const API_BASE = window.location.origin;
+  let currentTheme = localStorage.getItem('xmedia_theme') || 'light';
+  applyTheme(currentTheme);
 
-  // Navigation between landing and dashboard
+  // Navigation
   function navigate(page) {
+    document.getElementById('landing-page').classList.toggle('hidden', page !== 'landing');
+    document.getElementById('dashboard-page').classList.toggle('hidden', page !== 'dashboard');
     if (page === 'dashboard') {
-      document.getElementById('landing-page').classList.add('hidden');
-      document.getElementById('dashboard-page').classList.remove('hidden');
-    } else {
-      document.getElementById('landing-page').classList.remove('hidden');
-      document.getElementById('dashboard-page').classList.add('hidden');
+      loadTab('pages');
+      loadUserProfile();   // load profile on dashboard open
     }
   }
 
-  // Load a specific dashboard tab
   function loadTab(tabName) {
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    const link = document.querySelector(`.sidebar-item[onclick="loadTab('${tabName}')"]`);
+    if (link) link.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    if (tabName === 'pages') fetchPages();
-    if (tabName === 'overview') fetchPages();  // also loads for overview
+    document.getElementById('tab-'+tabName).classList.add('active');
+    switch(tabName) {
+      case 'pages': renderPages(); break;
+      case 'media': renderMediaLibrary(); break;
+      case 'scheduler': renderScheduler(); break;
+      case 'queue': renderQueue(); break;
+      case 'ai': renderAI(); break;
+      case 'analytics': renderAnalytics(); break;
+      case 'settings': renderSettings(); break;
+    }
   }
 
-  // Fetch and display pages
+  function showToast(msg, type='info') {
+    const container = document.getElementById('toast-container');
+    const bg = type==='success'?'#10b981':type==='error'?'#ef4444':'#3b82f6';
+    const toast = document.createElement('div');
+    toast.className='toast'; toast.style.background=bg; toast.textContent=msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  function applyTheme(theme) {
+    document.body.classList.toggle('dark-mode', theme==='dark');
+    document.getElementById('main-area').className = theme==='dark' ? 'flex-1 p-6 overflow-y-auto bg-gray-800 text-white' : 'flex-1 p-6 overflow-y-auto bg-gray-50';
+  }
+  function toggleTheme() {
+    currentTheme = currentTheme==='light'?'dark':'light';
+    applyTheme(currentTheme);
+    localStorage.setItem('xmedia_theme', currentTheme);
+  }
+
+  // ---------- User Profile ----------
+  async function loadUserProfile() {
+    try {
+      const res = await fetch(`${API_BASE}/api/user-profile`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.error) return;
+      document.getElementById('sidebar-user-name').textContent = data.name;
+      const pic = document.getElementById('sidebar-user-pic');
+      if (data.picture && data.picture.data && data.picture.data.url) {
+        pic.src = data.picture.data.url;
+        pic.classList.remove('hidden');
+      }
+    } catch (e) {
+      // not connected yet
+    }
+  }
+
+  // Pages tab – detailed profile cards
+  async function renderPages() {
+    const tab = document.getElementById('tab-pages');
+    const pages = await fetchPages();
+    tab.innerHTML = `<h1 class="text-3xl font-bold mb-6">Connected Pages (${pages.length})</h1>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="pages-grid"></div>`;
+    const grid = document.getElementById('pages-grid');
+    if (pages.length === 0) {
+      grid.innerHTML = '<p class="text-gray-500">No pages found. Connect your Facebook account in Settings.</p>';
+      return;
+    }
+    grid.innerHTML = pages.map(p => `
+      <div class="glass-card p-4">
+        <div class="flex items-center space-x-3 mb-3">
+          <img src="${p.picture_url || 'https://via.placeholder.com/60'}" alt="${p.name}" class="w-14 h-14 rounded-full object-cover">
+          <div>
+            <h3 class="font-semibold text-lg">${p.name}</h3>
+            <p class="text-xs text-gray-500">ID: ${p.id}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-2">
+            <span class="text-gray-500">Followers</span><br>
+            <span class="font-bold">${p.fan_count || 0}</span>
+          </div>
+          <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-2">
+            <span class="text-gray-500">Likes</span><br>
+            <span class="font-bold">${p.fan_count || 0}</span>   <!-- fan_count == likes -->
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
   async function fetchPages() {
     const res = await fetch(`${API_BASE}/api/pages`);
-    const pages = await res.json();
-    const grid = (document.getElementById('pages-grid-full') || document.getElementById('pages-grid-overview'));
-    if (grid) {
-      grid.innerHTML = pages.map(p => `
-        <div class="bg-white p-4 rounded-lg shadow text-center">
-          <img src="${p.picture?.data?.url || 'https://via.placeholder.com/60'}" alt="${p.name}" class="w-16 h-16 rounded-full mx-auto mb-2">
-          <h3 class="font-semibold">${p.name}</h3>
-          <p class="text-sm text-gray-500">${p.fan_count || 0} followers</p>
-        </div>
-      `).join('') || '<p>No pages found. Connect your Facebook account in Settings.</p>';
-    }
-    document.getElementById('stat-pages').innerText = pages.length;
+    return res.json();
   }
 
-  // AI Generation
-  async function generateAI() {
-    const desc = document.getElementById('ai-description').value;
-    const res = await fetch(`${API_BASE}/api/ai/generate`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({description: desc})
+  // Media Library (unchanged)
+  let uploadedFiles = [];
+  async function renderMediaLibrary() {
+    const tab = document.getElementById('tab-media');
+    tab.innerHTML = `
+      <h1 class="text-3xl font-bold mb-6">Media Library</h1>
+      <div class="glass-card p-6 mb-6">
+        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition">
+          <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+          <p class="text-gray-500">Drag & drop video files here, or click to browse</p>
+          <input type="file" id="file-input" accept="video/*" multiple class="hidden">
+        </div>
+        <div id="upload-progress" class="mt-4 hidden">
+          <p class="text-sm text-gray-500">Uploading... <span id="upload-status"></span></p>
+        </div>
+      </div>
+      <h2 class="text-2xl font-semibold mb-4">Uploaded Files</h2>
+      <div id="media-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    `;
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => e.preventDefault());
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => uploadFiles(fileInput.files));
+    await loadMediaFiles();
+  }
+
+  async function uploadFiles(files) {
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch(`${API_BASE}/api/media/upload`, { method:'POST', body: formData });
+        const data = await res.json();
+        if (data.success) showToast(`Uploaded ${file.name}`, 'success');
+        else showToast(data.error, 'error');
+      } catch (e) { showToast('Upload failed', 'error'); }
+    }
+    await loadMediaFiles();
+  }
+
+  async function loadMediaFiles() {
+    const res = await fetch(`${API_BASE}/api/media/list`);
+    const files = await res.json();
+    uploadedFiles = files;
+    const grid = document.getElementById('media-grid');
+    if (!grid) return;
+    grid.innerHTML = files.map(f => `
+      <div class="glass-card p-3 media-card">
+        <video src="/uploads/${f.filename}" class="w-full h-32 object-cover rounded-lg" controls></video>
+        <div class="mt-2 text-sm font-medium truncate">${f.original_name}</div>
+        <div class="flex justify-between items-center mt-1">
+          <span class="text-xs text-gray-500">${(f.file_size/1024).toFixed(1)} KB</span>
+          <button onclick="deleteMedia(${f.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function deleteMedia(id) {
+    await fetch(`${API_BASE}/api/media/delete/${id}`, { method:'DELETE' });
+    await loadMediaFiles();
+  }
+
+  // Scheduler (unchanged)
+  async function renderScheduler() {
+    const tab = document.getElementById('tab-scheduler');
+    const pages = await fetchPages();
+    const mediaRes = await fetch(`${API_BASE}/api/media/list`);
+    const mediaFiles = await mediaRes.json();
+    const pageOpts = pages.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    const mediaOpts = mediaFiles.map(m => `<option value="${m.id}">${m.original_name}</option>`).join('');
+    tab.innerHTML = `
+      <h1 class="text-3xl font-bold mb-6">Schedule Post</h1>
+      <div class="glass-card p-6 max-w-2xl">
+        <div class="mb-4">
+          <label class="block mb-1 font-medium">Page</label>
+          <select id="sched-page" class="w-full border rounded-lg p-2 bg-white dark:bg-gray-700">${pageOpts}</select>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-1 font-medium">Media File</label>
+          <select id="sched-media" class="w-full border rounded-lg p-2 bg-white dark:bg-gray-700">${mediaOpts}</select>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-1 font-medium">Caption (optional)</label>
+          <input type="text" id="sched-caption" class="w-full border rounded-lg p-2 bg-white dark:bg-gray-700">
+        </div>
+        <div class="mb-4">
+          <label class="block mb-1 font-medium">Exact Publish Time</label>
+          <input type="datetime-local" id="sched-time" class="w-full border rounded-lg p-2 bg-white dark:bg-gray-700">
+        </div>
+        <button onclick="addToSchedule()" class="btn-primary w-full">Schedule Post</button>
+      </div>
+    `;
+  }
+
+  async function addToSchedule() {
+    const page_id = document.getElementById('sched-page').value;
+    const media_id = document.getElementById('sched-media').value;
+    const caption = document.getElementById('sched-caption').value;
+    const scheduled_time = document.getElementById('sched-time').value;
+    if (!page_id || !media_id || !scheduled_time) {
+      showToast('Fill all fields', 'error'); return;
+    }
+    const res = await fetch(`${API_BASE}/api/schedule/add`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ page_id, media_id, caption, scheduled_time: new Date(scheduled_time).toISOString() })
     });
     const data = await res.json();
-    if (data.error) {
-      alert(data.error);
-      return;
-    }
-    document.getElementById('ai-caption').value = data.caption;
-    document.getElementById('ai-hashtags').value = data.hashtags.join(' ');
-    document.getElementById('ai-output').classList.remove('hidden');
-    document.getElementById('stat-ai').innerText = parseInt(document.getElementById('stat-ai').innerText) + 1;
+    if (data.success) showToast('Post scheduled!', 'success');
+    else showToast(data.error, 'error');
   }
 
-  // Save Facebook settings
-  async function saveFacebookSettings() {
-    const appId = document.getElementById('fb-app-id').value;
-    const appSecret = document.getElementById('fb-app-secret').value;
+  // Queue (unchanged)
+  async function renderQueue() {
+    const tab = document.getElementById('tab-queue');
+    const res = await fetch(`${API_BASE}/api/schedule/list`);
+    const posts = await res.json();
+    tab.innerHTML = `<h1 class="text-3xl font-bold mb-6">Scheduled Queue</h1>
+      <div class="grid grid-cols-1 gap-4">
+        ${posts.length ? posts.map(p => `
+          <div class="glass-card p-4 flex justify-between items-center">
+            <div>
+              <h3 class="font-semibold">${p.page_name}</h3>
+              <p class="text-sm">${p.media_filename} - ${p.caption || 'No caption'}</p>
+              <p class="text-xs text-gray-500">${new Date(p.scheduled_time).toLocaleString()} · ${p.status}</p>
+            </div>
+            ${p.status === 'pending' ? `<button onclick="cancelPost(${p.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-times-circle"></i></button>` : ''}
+          </div>
+        `).join('') : '<p class="text-gray-500">No scheduled posts.</p>'}
+      </div>`;
+  }
+
+  async function cancelPost(id) {
+    await fetch(`${API_BASE}/api/schedule/cancel/${id}`, { method:'POST' });
+    showToast('Cancelled', 'success');
+    renderQueue();
+  }
+
+  // AI Studio (unchanged)
+  function renderAI() {
+    document.getElementById('tab-ai').innerHTML = `
+      <h1 class="text-3xl font-bold mb-6">AI Caption & Hashtag Generator</h1>
+      <div class="glass-card p-6 max-w-2xl">
+        <textarea id="ai-desc" rows="4" class="w-full border rounded-lg p-3 mb-4 bg-white dark:bg-gray-700" placeholder="Describe your video content..."></textarea>
+        <button onclick="generateAI()" class="btn-primary">Generate</button>
+        <div id="ai-output" class="mt-6 hidden">
+          <label class="block mb-1 font-medium">Caption</label>
+          <textarea id="ai-caption" rows="3" class="w-full border rounded-lg p-3 mb-4 bg-white dark:bg-gray-700" readonly></textarea>
+          <label class="block mb-1 font-medium">Hashtags</label>
+          <input type="text" id="ai-hashtags" class="w-full border rounded-lg p-3 bg-white dark:bg-gray-700" readonly>
+          <button onclick="copyToClipboard(document.getElementById('ai-caption').value + ' ' + document.getElementById('ai-hashtags').value)" class="mt-3 btn-outline text-sm">Copy All</button>
+        </div>
+      </div>`;
+  }
+
+  async function generateAI() {
+    const desc = document.getElementById('ai-desc').value.trim();
+    if (!desc) { showToast('Enter a description', 'error'); return; }
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = 'Generating...';
+    try {
+      const res = await fetch(`${API_BASE}/api/ai/generate`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({description: desc})
+      });
+      const data = await res.json();
+      if (data.error) { showToast(data.error, 'error'); }
+      else {
+        document.getElementById('ai-caption').value = data.caption;
+        document.getElementById('ai-hashtags').value = data.hashtags.join(' ');
+        document.getElementById('ai-output').classList.remove('hidden');
+        showToast('Generated!', 'success');
+      }
+    } catch (e) { showToast('Failed', 'error'); }
+    btn.disabled = false; btn.textContent = 'Generate';
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'success'));
+  }
+
+  // Analytics (unchanged)
+  async function renderAnalytics() {
+    const tab = document.getElementById('tab-analytics');
+    const pages = await fetchPages();
+    if (pages.length === 0) {
+      tab.innerHTML = '<h1 class="text-3xl font-bold mb-6">Analytics</h1><p>No pages connected.</p>';
+      return;
+    }
+    const pageId = pages[0].id;
+    tab.innerHTML = `<h1 class="text-3xl font-bold mb-6">Analytics (${pages[0].name})</h1><div class="spinner mx-auto"></div>`;
+    try {
+      const res = await fetch(`${API_BASE}/api/analytics/${pageId}`);
+      const data = await res.json();
+      if (data.error) { tab.innerHTML = `<h1 class="text-3xl font-bold mb-6">Analytics</h1><p class="text-red-500">${data.error}</p>`; return; }
+      const metrics = data.data || [];
+      const cardsHtml = metrics.map(m => `
+        <div class="glass-card p-4 text-center">
+          <h3 class="text-gray-500 text-sm">${m.name}</h3>
+          <p class="text-2xl font-bold">${m.values[0]?.value || 0}</p>
+        </div>`).join('');
+      tab.innerHTML = `
+        <h1 class="text-3xl font-bold mb-6">Analytics (${pages[0].name})</h1>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">${cardsHtml}</div>
+        <div class="glass-card p-6"><canvas id="analyticsChart" height="200"></canvas></div>`;
+      const ctx = document.getElementById('analyticsChart')?.getContext('2d');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: metrics.map(m => m.name),
+            datasets: [{
+              label: 'Value',
+              data: metrics.map(m => m.values[0]?.value || 0),
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,0.1)',
+              fill: true
+            }]
+          },
+          options: { responsive: true }
+        });
+      }
+    } catch (e) {
+      tab.innerHTML = '<h1 class="text-3xl font-bold mb-6">Analytics</h1><p>Failed to load analytics.</p>';
+    }
+  }
+
+  // Settings (unchanged)
+  function renderSettings() {
+    document.getElementById('tab-settings').innerHTML = `
+      <h1 class="text-3xl font-bold mb-6">Settings</h1>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-semibold mb-4">Facebook App</h2>
+          <input type="text" id="fb-app-id" placeholder="App ID" class="w-full border rounded-lg p-2 mb-3 bg-white dark:bg-gray-700">
+          <input type="password" id="fb-app-secret" placeholder="App Secret" class="w-full border rounded-lg p-2 mb-4 bg-white dark:bg-gray-700">
+          <button onclick="saveFBSettings()" class="btn-primary w-full mb-2">Save Credentials</button>
+          <button onclick="connectFB()" class="btn-outline w-full">Connect Facebook</button>
+        </div>
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-semibold mb-4">Groq AI API Key</h2>
+          <input type="password" id="groq-key" placeholder="API Key" class="w-full border rounded-lg p-2 mb-4 bg-white dark:bg-gray-700">
+          <button onclick="saveGroq()" class="btn-primary w-full">Save Key</button>
+        </div>
+      </div>`;
+    document.getElementById('fb-app-id').value = localStorage.getItem('xmedia_fb_app_id') || '';
+    document.getElementById('fb-app-secret').value = localStorage.getItem('xmedia_fb_app_secret') || '';
+    document.getElementById('groq-key').value = localStorage.getItem('xmedia_groq_key') || '';
+  }
+
+  async function saveFBSettings() {
+    const appId = document.getElementById('fb-app-id').value.trim();
+    const appSecret = document.getElementById('fb-app-secret').value.trim();
+    if (!appId) { showToast('App ID required', 'error'); return; }
+    localStorage.setItem('xmedia_fb_app_id', appId);
+    localStorage.setItem('xmedia_fb_app_secret', appSecret);
     await fetch(`${API_BASE}/api/settings/facebook`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({app_id: appId, app_secret: appSecret})
     });
-    alert('Facebook credentials saved.');
+    showToast('Credentials saved', 'success');
   }
 
-  // Save Groq key
-  async function saveGroqKey() {
-    const key = document.getElementById('groq-api-key').value;
+  async function saveGroq() {
+    const key = document.getElementById('groq-key').value.trim();
+    if (!key) { showToast('Enter a key', 'error'); return; }
+    localStorage.setItem('xmedia_groq_key', key);
     await fetch(`${API_BASE}/api/settings/groq`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({api_key: key})
     });
-    alert('Groq API key saved.');
+    showToast('Groq key saved', 'success');
   }
 
-  // Facebook Connect (using JS SDK)
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId: '',  // Will be set dynamically after user saves App ID
-      cookie: true,
-      xfbml: true,
-      version: 'v19.0'
-    });
-  };
-
-  async function connectFacebook() {
-    // Fetch saved App ID first
-    const res = await fetch(`${API_BASE}/api/settings/facebook`);
-    const data = await res.json();
-    if (!data.app_id) {
-      alert('Please save your Facebook App ID first.');
-      return;
-    }
-    FB.init({ appId: data.app_id, version: 'v19.0' });
+  // Facebook Connect
+  window.fbAsyncInit = function() { FB.init({ appId: '', cookie:true, xfbml:true, version:'v19.0' }); };
+  async function connectFB() {
+    const appId = localStorage.getItem('xmedia_fb_app_id') || document.getElementById('fb-app-id').value;
+    if (!appId) { showToast('Enter App ID first', 'error'); return; }
+    FB.init({ appId, version:'v19.0' });
     FB.login(function(response) {
       if (response.authResponse) {
-        const shortToken = response.authResponse.accessToken;
-        // Send to backend
         fetch(`${API_BASE}/api/connect-facebook`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({short_lived_token: shortToken})
-        }).then(res => res.json()).then(result => {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({short_lived_token: response.authResponse.accessToken})
+        }).then(r => r.json()).then(result => {
           if (result.success) {
-            alert('Facebook connected! Pages loaded.');
-            fetchPages();
+            showToast('Facebook connected!', 'success');
+            loadUserProfile();  // load profile immediately
+            if (document.getElementById('tab-pages').classList.contains('active')) renderPages();
           } else {
-            alert('Error: ' + result.error);
+            showToast(result.error || 'Connection failed', 'error');
           }
         });
-      } else {
-        alert('Login cancelled.');
-      }
-    }, {scope: 'pages_show_list,pages_read_engagement,pages_manage_posts'});
+      } else { showToast('Login cancelled', 'error'); }
+    }, {scope:'pages_show_list,pages_read_engagement,pages_manage_posts'});
   }
 
-  // Chart placeholder (empty)
-  const ctx = document.getElementById('analyticsChart')?.getContext('2d');
-  if (ctx) new Chart(ctx, {
-    type: 'line',
-    data: { labels: [], datasets: [{ label: 'Views', data: [], borderColor: '#1877F2' }] },
-    options: { responsive: true }
-  });
+  // Init
+  navigate('landing');
+  loadUserProfile();   // attempt on page load if token exists
 </script>
-<!-- Facebook SDK -->
 <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
 </body>
 </html>
