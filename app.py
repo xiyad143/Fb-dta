@@ -10,14 +10,16 @@ from flask_session import Session
 from openai import OpenAI
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'xmediapro-secret-change-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///xmediapro.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'xmediapro-secret-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/xmediapro.db'   # /tmp writable on Render
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SESSION_TYPE'] = 'filesystem'   # new
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_sessions'                  # Render writable path
+app.config['SESSION_FILE_THRESHOLD'] = 100
 
 CORS(app)
 db = SQLAlchemy(app)
-Session(app)                                # new
+Session(app)
 
 # ---------- MODELS ----------
 class User(db.Model):
@@ -38,11 +40,11 @@ class ReelPost(db.Model):
     scheduled_time = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ---------- ডাটাবেজ তৈরি ----------
+# ---------- CREATE TABLES ----------
 with app.app_context():
     db.create_all()
 
-# ---------- HELPER FUNCTIONS ----------
+# ---------- HELPERS ----------
 def get_user():
     user = User.query.get(1)
     if not user:
@@ -100,42 +102,16 @@ def fetch_facebook_pages(long_token):
         })
     return pages
 
-def start_reel_upload(page_id, page_token):
-    url = f"https://graph.facebook.com/v19.0/{page_id}/video_reels"
-    params = {"upload_phase": "start", "access_token": page_token}
-    resp = requests.post(url, params=params)
-    if resp.status_code != 200:
-        raise Exception(f"Reel start failed: {resp.text}")
-    data = resp.json()
-    return data["video_id"], data["upload_url"]
+def get_base_url():
+    """Return the correct base URL using environment or request headers."""
+    base = os.environ.get('BASE_URL', None)
+    if base:
+        return base
+    # Fallback: use request host and correct scheme
+    scheme = request.headers.get('X-Forwarded-Proto', 'http')
+    return f"{scheme}://{request.host}"
 
-def upload_video_to_facebook(upload_url, video_data, content_type="video/mp4"):
-    headers = {
-        "Content-Type": "application/octet-stream",
-        "Content-Length": str(len(video_data)),
-    }
-    resp = requests.post(upload_url, data=video_data, headers=headers)
-    if resp.status_code != 200:
-        raise Exception(f"Video upload failed: {resp.text}")
-    return resp.json()
-
-def finish_reel_publish(page_id, page_token, video_id, description="", scheduled_time=None):
-    url = f"https://graph.facebook.com/v19.0/{page_id}/video_reels"
-    params = {
-        "upload_phase": "finish",
-        "video_state": "SCHEDULED" if scheduled_time else "PUBLISHED",
-        "description": description,
-        "access_token": page_token
-    }
-    if scheduled_time:
-        params["scheduled_publish_time"] = scheduled_time
-    payload = {"video_id": video_id}
-    resp = requests.post(url, params=params, json=payload)
-    if resp.status_code != 200:
-        raise Exception(f"Reel publish failed: {resp.text}")
-    return resp.json()
-
-# ---------- GLOBAL ERROR HANDLER ----------
+# ---------- ERROR HANDLER ----------
 @app.errorhandler(Exception)
 def handle_exception(e):
     response = {
@@ -150,7 +126,11 @@ def handle_exception(e):
 def index():
     return render_template('index.html')
 
-# ----- Existing Facebook settings routes -----
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok"}), 200
+
+# Facebook settings
 @app.route('/api/settings/facebook', methods=['POST'])
 def save_facebook_settings():
     data = request.get_json()
@@ -167,7 +147,7 @@ def get_facebook_settings():
     user = get_user()
     return jsonify({"app_id": user.facebook_app_id or ""})
 
-# ----- Groq settings routes -----
+# Groq settings
 @app.route('/api/settings/groq', methods=['POST'])
 def save_groq_settings():
     data = request.get_json()
@@ -183,7 +163,7 @@ def get_groq_settings():
     user = get_user()
     return jsonify({"has_key": bool(user.groq_api_key)})
 
-# ----- Original JS‑SDK based Facebook connection route -----
+# JS SDK based connect (original)
 @app.route('/api/connect-facebook', methods=['POST'])
 def connect_facebook():
     data = request.get_json()
@@ -203,16 +183,14 @@ def connect_facebook():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ----- New server‑side OAuth Facebook Login (redirect flow) -----
+# Server-side OAuth login
 @app.route('/api/facebook-login')
 def facebook_login():
-    """Returns the Facebook OAuth login URL."""
     user = get_user()
     app_id = user.facebook_app_id
     if not app_id:
         return jsonify({"error": "Facebook App ID not configured"}), 400
-    # Use request.host_url to build dynamic redirect URI
-    redirect_uri = request.host_url.rstrip('/') + '/api/facebook-callback'
+    redirect_uri = get_base_url().rstrip('/') + '/api/facebook-callback'
     login_url = (
         f"https://www.facebook.com/v19.0/dialog/oauth"
         f"?client_id={app_id}"
@@ -223,7 +201,6 @@ def facebook_login():
 
 @app.route('/api/facebook-callback')
 def facebook_callback():
-    """Handles Facebook OAuth callback, exchanges code for token, and fetches pages."""
     code = request.args.get('code')
     if not code:
         return jsonify({"error": "Missing authorization code"}), 400
@@ -232,9 +209,7 @@ def facebook_callback():
     app_secret = user.facebook_app_secret
     if not app_id or not app_secret:
         return jsonify({"error": "Facebook App credentials not configured"}), 400
-
-    redirect_uri = request.host_url.rstrip('/') + '/api/facebook-callback'
-    # Exchange code for short‑lived access token
+    redirect_uri = get_base_url().rstrip('/') + '/api/facebook-callback'
     token_url = (
         f"https://graph.facebook.com/v19.0/oauth/access_token"
         f"?client_id={app_id}"
@@ -249,8 +224,6 @@ def facebook_callback():
     short_token = token_data.get('access_token')
     if not short_token:
         return jsonify({"error": "No access token received"}), 500
-
-    # Exchange for long‑lived token and fetch pages (reusing existing logic)
     try:
         long_token = exchange_short_lived_token(user, short_token)
         pages = fetch_facebook_pages(long_token)
@@ -261,19 +234,17 @@ def facebook_callback():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ----- Logout & Reset routes -----
+# Logout & Reset
 @app.route('/api/logout', methods=['POST'])
 def logout():
-    """Clears the stored long‑lived token and pages."""
     user = get_user()
     user.long_lived_token = None
     user.pages_json = None
     db.session.commit()
-    return jsonify({'success': True, 'message': 'Logged out successfully'})
+    return jsonify({'success': True, 'message': 'Logged out'})
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    """Resets all credentials (App ID/Secret, Groq key, token, pages)."""
     user = get_user()
     user.facebook_app_id = None
     user.facebook_app_secret = None
@@ -281,9 +252,9 @@ def reset():
     user.long_lived_token = None
     user.pages_json = None
     db.session.commit()
-    return jsonify({'success': True, 'message': 'All credentials have been reset'})
+    return jsonify({'success': True, 'message': 'All credentials reset'})
 
-# ----- Other original routes (pages, AI, reels, analytics) remain unchanged -----
+# Pages, AI, Reels, Analytics (unchanged, kept for completeness)
 @app.route('/api/pages', methods=['GET'])
 def get_pages():
     user = get_user()
@@ -353,6 +324,7 @@ def upload_local_reel():
         return jsonify({"error": "Page not found or not connected"}), 400
 
     try:
+        # Facebook Reel upload logic (as before) ...
         video_id, upload_url = start_reel_upload(page_id, page_token)
         video_data = file.read()
         upload_video_to_facebook(upload_url, video_data)
@@ -372,6 +344,8 @@ def upload_local_reel():
         return jsonify({"message": "Reel uploaded and published", "video_id": video_id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# (Include start_reel_upload, upload_video_to_facebook, finish_reel_publish – already defined above)
 
 @app.route('/api/reels/upload-hosted', methods=['POST'])
 def upload_hosted_reel():
@@ -405,7 +379,7 @@ def upload_hosted_reel():
         )
         db.session.add(reel)
         db.session.commit()
-        return jsonify({"message": "Reel uploaded from URL and published", "video_id": video_id})
+        return jsonify({"message": "Reel uploaded from URL", "video_id": video_id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -477,5 +451,41 @@ def get_analytics(page_id):
     except Exception as e:
         return jsonify({"error": str(e), "reach":0,"engagement":0,"followers":0,"video_views":0,"daily_reach":[]})
 
+# Required helper functions
+def start_reel_upload(page_id, page_token):
+    url = f"https://graph.facebook.com/v19.0/{page_id}/video_reels"
+    params = {"upload_phase": "start", "access_token": page_token}
+    resp = requests.post(url, params=params)
+    if resp.status_code != 200:
+        raise Exception(f"Reel start failed: {resp.text}")
+    data = resp.json()
+    return data["video_id"], data["upload_url"]
+
+def upload_video_to_facebook(upload_url, video_data):
+    headers = {
+        "Content-Type": "application/octet-stream",
+        "Content-Length": str(len(video_data)),
+    }
+    resp = requests.post(upload_url, data=video_data, headers=headers)
+    if resp.status_code != 200:
+        raise Exception(f"Video upload failed: {resp.text}")
+    return resp.json()
+
+def finish_reel_publish(page_id, page_token, video_id, description="", scheduled_time=None):
+    url = f"https://graph.facebook.com/v19.0/{page_id}/video_reels"
+    params = {
+        "upload_phase": "finish",
+        "video_state": "SCHEDULED" if scheduled_time else "PUBLISHED",
+        "description": description,
+        "access_token": page_token
+    }
+    if scheduled_time:
+        params["scheduled_publish_time"] = scheduled_time
+    payload = {"video_id": video_id}
+    resp = requests.post(url, params=params, json=payload)
+    if resp.status_code != 200:
+        raise Exception(f"Reel publish failed: {resp.text}")
+    return resp.json()
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='0.0.0.0')
