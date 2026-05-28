@@ -1,7 +1,5 @@
-import os
-import json
-import traceback
-import requests
+# app.py (সম্পূর্ণ ফাইল)
+import os, json, traceback, requests
 from datetime import datetime, timezone
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
@@ -34,7 +32,11 @@ class ReelPost(db.Model):
     scheduled_time = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ---------- HELPERS ----------
+# ---------- ডাটাবেজ তৈরি ----------
+with app.app_context():
+    db.create_all()   # <-- এবার টেবিল তৈরি হবে
+
+# ---------- HELPER FUNCTIONS ----------
 def get_user():
     user = User.query.get(1)
     if not user:
@@ -127,10 +129,9 @@ def finish_reel_publish(page_id, page_token, video_id, description="", scheduled
         raise Exception(f"Reel publish failed: {resp.text}")
     return resp.json()
 
-# ---------- GLOBAL ERROR HANDLER ----------
+# ---------- ROUTES (আগের মতোই) ----------
 @app.errorhandler(Exception)
 def handle_exception(e):
-    # Return JSON for all unhandled errors (even 404, 500)
     response = {
         "error": str(e),
         "type": type(e).__name__,
@@ -138,7 +139,6 @@ def handle_exception(e):
     }
     return jsonify(response), 500
 
-# ---------- ROUTES ----------
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -217,17 +217,13 @@ def generate_caption():
     if not user.groq_api_key:
         return jsonify({"error": "Please save your Groq API key in Settings"}), 400
     try:
-        client = OpenAI(
-            base_url="https://api.groq.com/openai/v1",
-            api_key=user.groq_api_key
-        )
+        client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=user.groq_api_key)
         prompt = f"""Generate a social media caption and 10 relevant hashtags for a Facebook Reel.
 Description: {description}
 Tone: {tone}
 Language: {language}
 Return only valid JSON with keys "caption" and "hashtags" (hashtags as a space-separated string with #). Example:
 {{"caption": "Your caption here", "hashtags": "#tag1 #tag2 #tag3"}}"""
-
         response = client.chat.completions.create(
             model="llama3-70b-8192",
             messages=[{"role": "user", "content": prompt}],
@@ -391,6 +387,4 @@ def get_analytics(page_id):
         return jsonify({"error": str(e), "reach":0,"engagement":0,"followers":0,"video_views":0,"daily_reach":[]})
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
