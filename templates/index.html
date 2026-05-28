@@ -24,7 +24,7 @@
             <h1 class="text-xl font-bold text-blue-600">XMedia Pro</h1>
         </div>
         <nav class="flex-1 p-3 space-y-1">
-            <a href="#" data-section="dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"><i class="fas fa-tachometer-alt w-5"></i> Dashboard</a>
+            <a href="#" data-section="dashboard" class="sidebar-link active flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"><i class="fas fa-tachometer-alt w-5"></i> Dashboard</a>
             <a href="#" data-section="pages" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"><i class="fas fa-th-large w-5"></i> Pages</a>
             <a href="#" data-section="library" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"><i class="fas fa-film w-5"></i> Upload Library</a>
             <a href="#" data-section="scheduler" class="sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"><i class="fas fa-clock w-5"></i> Scheduler</a>
@@ -39,16 +39,11 @@
 
     <!-- Main Content -->
     <div class="flex-1 overflow-y-auto p-6">
-        <!-- Dashboard Section -->
+        <!-- Dashboard -->
         <div id="dashboard-section" class="section">
-            <div class="mb-6">
-                <h2 class="text-2xl font-semibold">Dashboard</h2>
-            </div>
-            <!-- User Info Card -->
+            <div class="mb-6"><h2 class="text-2xl font-semibold">Dashboard</h2></div>
             <div id="user-card" class="bg-white p-4 rounded-xl shadow mb-6 flex items-center gap-4"></div>
-            <!-- Page Cards Grid -->
             <div id="page-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
-            <!-- Quick Upload -->
             <div class="bg-white rounded-xl shadow p-5 mb-8">
                 <h3 class="text-lg font-semibold mb-3">⚡ Quick Upload</h3>
                 <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer">
@@ -62,21 +57,20 @@
                     <button id="quick-upload-btn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">Upload to Library</button>
                 </div>
             </div>
-            <!-- Upcoming Schedule Preview -->
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 class="text-lg font-semibold mb-3">⏰ Upcoming Schedule</h3>
                 <div id="upcoming-preview" class="space-y-2"></div>
             </div>
         </div>
 
-        <!-- Pages Section -->
+        <!-- Pages -->
         <div id="pages-section" class="section hidden">
             <h2 class="text-2xl font-semibold mb-4">📄 Your Pages</h2>
             <button id="refresh-pages-btn" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Refresh Pages</button>
             <div id="pages-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
 
-        <!-- Library Section -->
+        <!-- Library -->
         <div id="library-section" class="section hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold">🎬 Media Library</h2>
@@ -85,7 +79,7 @@
             <div id="media-grid" class="video-grid"></div>
         </div>
 
-        <!-- Scheduler Section -->
+        <!-- Scheduler -->
         <div id="scheduler-section" class="section hidden">
             <h2 class="text-2xl font-semibold mb-4">⏰ Schedule New Post</h2>
             <div class="bg-white rounded-xl shadow p-5 mb-6">
@@ -114,7 +108,7 @@
             <div id="scheduled-list" class="bg-white rounded-xl shadow overflow-x-auto"></div>
         </div>
 
-        <!-- Posts Section -->
+        <!-- Posts -->
         <div id="posts-section" class="section hidden">
             <h2 class="text-2xl font-semibold mb-4">📢 All Posts</h2>
             <div class="flex gap-2 mb-4">
@@ -126,7 +120,7 @@
             <div id="posts-list" class="bg-white rounded-xl shadow divide-y"></div>
         </div>
 
-        <!-- Analytics Section -->
+        <!-- Analytics -->
         <div id="analytics-section" class="section hidden">
             <h2 class="text-2xl font-semibold mb-4">📊 Analytics</h2>
             <div class="mb-4">
@@ -140,7 +134,7 @@
             </div>
         </div>
 
-        <!-- Settings Section -->
+        <!-- Settings -->
         <div id="settings-section" class="section hidden">
             <h2 class="text-2xl font-semibold mb-4">⚙️ Settings</h2>
             <div class="bg-white rounded-xl shadow p-6 space-y-4">
@@ -185,13 +179,11 @@
     let scheduledPosts = [];
     let analyticsCharts = {};
 
-    // Helper: fetch JSON
     async function apiCall(url, options = {}) {
         const res = await fetch(url, options);
         return res.json();
     }
 
-    // Load user profile and pages
     async function loadUser() {
         const data = await apiCall('/api/user-profile').catch(() => ({ error: 'Not connected' }));
         if (data.error) {
@@ -212,38 +204,31 @@
 
     async function loadPages() {
         const res = await apiCall('/api/pages');
-        if (res.error) {
-            pages = [];
-        } else {
-            pages = res;
-            await syncPageSelectors();
-        }
+        pages = res.error ? [] : res;
         renderPageCards();
+        syncPageSelectors();
     }
 
-    async function syncPageSelectors() {
-        const selects = ['quick-page', 'schedule-page', 'analytics-page'];
-        for (let id of selects) {
+    function syncPageSelectors() {
+        ['quick-page', 'schedule-page', 'analytics-page'].forEach(id => {
             const sel = document.getElementById(id);
             if (sel) {
                 sel.innerHTML = pages.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
                 if (pages.length) sel.value = pages[0].id;
             }
-        }
+        });
     }
 
     async function loadMedia() {
         const res = await apiCall('/api/media');
         mediaList = res;
         renderMediaLibrary();
-        await syncVideoSelect();
+        syncVideoSelect();
     }
 
-    async function syncVideoSelect() {
+    function syncVideoSelect() {
         const sel = document.getElementById('schedule-video');
-        if (sel) {
-            sel.innerHTML = mediaList.map(m => `<option value="${m.id}">${m.original_name}</option>`).join('');
-        }
+        if (sel) sel.innerHTML = mediaList.map(m => `<option value="${m.id}">${m.original_name}</option>`).join('');
     }
 
     async function loadScheduled() {
@@ -254,13 +239,12 @@
         renderPostsList('all');
     }
 
-    // ---------- Dashboard ----------
     function renderPageCards() {
         const container = document.getElementById('page-cards');
         if (!container) return;
         container.innerHTML = pages.map(p => `
             <div class="bg-white rounded-xl shadow p-4 flex items-center gap-3">
-                <img src="${p.picture || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full">
+                <img src="${p.picture_url || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full">
                 <div class="flex-1">
                     <h3 class="font-semibold">${p.name}</h3>
                     <p class="text-sm text-gray-500">Followers: ${p.fan_count || 0}</p>
@@ -289,7 +273,7 @@
         if (!upcoming.length) container.innerHTML = '<p class="text-gray-500">No upcoming posts</p>';
     }
 
-    // ---------- Media Library with drag & drop ----------
+    // ---------- Media Library ----------
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     if (dropzone) {
@@ -378,7 +362,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ page_id: pageId, media_id: parseInt(mediaId), caption, scheduled_time: datetime })
         });
-        if (res.id) {
+        if (res.success) {
             alert('Scheduled!');
             await loadScheduled();
         } else alert(res.error);
@@ -445,8 +429,8 @@
     async function loadAnalytics(pageId) {
         const res = await apiCall(`/api/analytics/${pageId}`);
         if (res.error) return alert(res.error);
-        const dates = (res.page_follows || []).map(d => d.date);
-        const follows = (res.page_follows || []).map(d => d.value);
+        const dates = (res.page_fans || []).map(d => d.date);
+        const follows = (res.page_fans || []).map(d => d.value);
         const reach = (res.page_impressions || []).map(d => d.value);
         const engagement = (res.page_engaged_users || []).map(d => d.value);
         if (analyticsCharts.followers) analyticsCharts.followers.destroy();
@@ -462,11 +446,11 @@
     // ---------- Settings ----------
     async function loadSettings() {
         const res = await apiCall('/api/settings');
-        document.getElementById('fb-app-id').value = res.fb_app_id;
-        document.getElementById('fb-app-secret').value = res.fb_app_secret;
-        document.getElementById('groq-key').value = res.groq_api_key;
-        document.getElementById('telegram-token').value = res.telegram_bot_token;
-        document.getElementById('telegram-chat').value = res.telegram_chat_id;
+        document.getElementById('fb-app-id').value = res.fb_app_id || '';
+        document.getElementById('fb-app-secret').value = res.fb_app_secret || '';
+        document.getElementById('groq-key').value = res.groq_api_key || '';
+        document.getElementById('telegram-token').value = res.telegram_bot_token || '';
+        document.getElementById('telegram-chat').value = res.telegram_chat_id || '';
         const status = await apiCall('/api/user-profile').catch(() => ({ error: 'Not connected' }));
         document.getElementById('fb-connection-status').innerHTML = status.error ? '❌ Not connected' : '✅ Connected as ' + (status.name || '');
     }
@@ -518,7 +502,6 @@
         });
     });
 
-    // Filter posts buttons
     document.querySelectorAll('.filter-posts-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.filter-posts-btn').forEach(b => b.classList.remove('active', 'bg-blue-600', 'text-white'));
@@ -530,7 +513,6 @@
     // Initial load
     loadUser();
     loadSettings();
-    // Helper to parse Facebook token from redirect
     if (window.location.hash) {
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
