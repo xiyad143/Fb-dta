@@ -1,14 +1,15 @@
 import os
 import json
+import traceback
 import requests
 from datetime import datetime, timezone
-from flask import Flask, render_template, request, jsonify, g
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from openai import OpenAI
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'xmediapro-secret-key-change-in-production'
+app.config['SECRET_KEY'] = 'xmediapro-secret-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///xmediapro.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
@@ -21,21 +22,20 @@ class User(db.Model):
     facebook_app_secret = db.Column(db.String(200))
     groq_api_key = db.Column(db.String(200))
     long_lived_token = db.Column(db.String(500))
-    pages_json = db.Column(db.Text)  # JSON list of {id, name, access_token, fan_count}
+    pages_json = db.Column(db.Text)
 
 class ReelPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     page_id = db.Column(db.String(50))
     video_id = db.Column(db.String(100))
-    status = db.Column(db.String(20))  # processing, published, scheduled
+    status = db.Column(db.String(20))
     caption = db.Column(db.Text)
     scheduled_time = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ---------- HELPERS ----------
 def get_user():
-    """Always return the single default user (id=1). Create if not exists."""
     user = User.query.get(1)
     if not user:
         user = User(id=1)
@@ -44,7 +44,6 @@ def get_user():
     return user
 
 def get_page_token(page_id):
-    """Retrieve the page access token from the stored pages JSON."""
     user = get_user()
     if not user.pages_json:
         return None
@@ -53,12 +52,11 @@ def get_page_token(page_id):
         for p in pages:
             if p['id'] == page_id:
                 return p['access_token']
-    except Exception:
+    except:
         return None
     return None
 
 def exchange_short_lived_token(user, short_token):
-    """Exchange a short-lived token for a long-lived token."""
     url = "https://graph.facebook.com/v19.0/oauth/access_token"
     params = {
         "grant_type": "fb_exchange_token",
@@ -73,7 +71,6 @@ def exchange_short_lived_token(user, short_token):
     return data.get("access_token")
 
 def fetch_facebook_pages(long_token):
-    """Retrieve all pages the user manages."""
     url = "https://graph.facebook.com/v19.0/me/accounts"
     params = {"access_token": long_token}
     resp = requests.get(url, params=params)
@@ -82,7 +79,6 @@ def fetch_facebook_pages(long_token):
     data = resp.json()
     pages = []
     for p in data.get("data", []):
-        # also fetch fan count
         fan_url = f"https://graph.facebook.com/v19.0/{p['id']}?fields=fan_count&access_token={p['access_token']}"
         fan_resp = requests.get(fan_url)
         fan_count = 0
@@ -97,12 +93,8 @@ def fetch_facebook_pages(long_token):
     return pages
 
 def start_reel_upload(page_id, page_token):
-    """Initiate a Facebook Reel upload session."""
     url = f"https://graph.facebook.com/v19.0/{page_id}/video_reels"
-    params = {
-        "upload_phase": "start",
-        "access_token": page_token
-    }
+    params = {"upload_phase": "start", "access_token": page_token}
     resp = requests.post(url, params=params)
     if resp.status_code != 200:
         raise Exception(f"Reel start failed: {resp.text}")
@@ -110,7 +102,6 @@ def start_reel_upload(page_id, page_token):
     return data["video_id"], data["upload_url"]
 
 def upload_video_to_facebook(upload_url, video_data, content_type="video/mp4"):
-    """Upload binary video data to Facebook's rupload server."""
     headers = {
         "Content-Type": "application/octet-stream",
         "Content-Length": str(len(video_data)),
@@ -118,10 +109,9 @@ def upload_video_to_facebook(upload_url, video_data, content_type="video/mp4"):
     resp = requests.post(upload_url, data=video_data, headers=headers)
     if resp.status_code != 200:
         raise Exception(f"Video upload failed: {resp.text}")
-    return resp.json()  # success response
+    return resp.json()
 
 def finish_reel_publish(page_id, page_token, video_id, description="", scheduled_time=None):
-    """Finish the Reel upload and publish (immediately or scheduled)."""
     url = f"https://graph.facebook.com/v19.0/{page_id}/video_reels"
     params = {
         "upload_phase": "finish",
@@ -137,12 +127,22 @@ def finish_reel_publish(page_id, page_token, video_id, description="", scheduled
         raise Exception(f"Reel publish failed: {resp.text}")
     return resp.json()
 
+# ---------- GLOBAL ERROR HANDLER ----------
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Return JSON for all unhandled errors (even 404, 500)
+    response = {
+        "error": str(e),
+        "type": type(e).__name__,
+        "detail": traceback.format_exc()
+    }
+    return jsonify(response), 500
+
 # ---------- ROUTES ----------
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Facebook settings
 @app.route('/api/settings/facebook', methods=['POST'])
 def save_facebook_settings():
     data = request.get_json()
@@ -159,7 +159,6 @@ def get_facebook_settings():
     user = get_user()
     return jsonify({"app_id": user.facebook_app_id or ""})
 
-# Groq settings
 @app.route('/api/settings/groq', methods=['POST'])
 def save_groq_settings():
     data = request.get_json()
@@ -175,7 +174,6 @@ def get_groq_settings():
     user = get_user()
     return jsonify({"has_key": bool(user.groq_api_key)})
 
-# Connect Facebook (exchange short-lived token, store pages)
 @app.route('/api/connect-facebook', methods=['POST'])
 def connect_facebook():
     data = request.get_json()
@@ -202,13 +200,11 @@ def get_pages():
         return jsonify({"pages": []})
     try:
         pages = json.loads(user.pages_json)
-        # Remove access_token from response for security
         safe_pages = [{"id": p["id"], "name": p["name"], "fan_count": p.get("fan_count", 0)} for p in pages]
         return jsonify({"pages": safe_pages})
-    except Exception:
+    except:
         return jsonify({"pages": []})
 
-# AI generation
 @app.route('/api/ai/generate', methods=['POST'])
 def generate_caption():
     data = request.get_json()
@@ -239,7 +235,6 @@ Return only valid JSON with keys "caption" and "hashtags" (hashtags as a space-s
             max_tokens=400
         )
         content = response.choices[0].message.content.strip()
-        # Attempt to parse JSON
         result = json.loads(content)
         return jsonify({"caption": result.get("caption", ""), "hashtags": result.get("hashtags", "")})
     except json.JSONDecodeError:
@@ -247,7 +242,6 @@ Return only valid JSON with keys "caption" and "hashtags" (hashtags as a space-s
     except Exception as e:
         return jsonify({"error": f"Groq API error: {str(e)}"}), 500
 
-# Reels upload local file
 @app.route('/api/reels/upload-local', methods=['POST'])
 def upload_local_reel():
     page_id = request.form.get('page_id')
@@ -256,7 +250,7 @@ def upload_local_reel():
     scheduled_time = None
     if scheduled_str:
         try:
-            scheduled_time = int(float(scheduled_str))  # Unix timestamp
+            scheduled_time = int(float(scheduled_str))
         except:
             pass
     if not page_id:
@@ -277,7 +271,6 @@ def upload_local_reel():
         upload_video_to_facebook(upload_url, video_data)
         finish_reel_publish(page_id, page_token, video_id, caption, scheduled_time)
 
-        # Save to DB
         user = get_user()
         reel = ReelPost(
             user_id=user.id,
@@ -293,26 +286,23 @@ def upload_local_reel():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Reels upload from hosted URL
 @app.route('/api/reels/upload-hosted', methods=['POST'])
 def upload_hosted_reel():
     data = request.get_json()
     page_id = data.get('page_id')
     file_url = data.get('file_url')
     caption = data.get('caption', '')
-    scheduled_time = data.get('scheduled_publish_time')  # unix timestamp
+    scheduled_time = data.get('scheduled_publish_time')
     if not page_id or not file_url:
         return jsonify({"error": "page_id and file_url required"}), 400
     page_token = get_page_token(page_id)
     if not page_token:
         return jsonify({"error": "Page not found or not connected"}), 400
     try:
-        # Download video from URL
         resp = requests.get(file_url, stream=True, timeout=30)
         if resp.status_code != 200:
             return jsonify({"error": f"Failed to download video: HTTP {resp.status_code}"}), 400
         video_data = resp.content
-
         video_id, upload_url = start_reel_upload(page_id, page_token)
         upload_video_to_facebook(upload_url, video_data)
         finish_reel_publish(page_id, page_token, video_id, caption, scheduled_time)
@@ -358,7 +348,6 @@ def publish_reel(video_id):
     if not page_token:
         return jsonify({"error": "Page token not available"}), 400
     try:
-        # finish with PUBLISHED state, no schedule
         finish_reel_publish(reel.page_id, page_token, video_id, reel.caption or "")
         reel.status = "published"
         db.session.commit()
@@ -366,29 +355,18 @@ def publish_reel(video_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Simple analytics endpoint (real data from Facebook if possible)
 @app.route('/api/analytics/<page_id>', methods=['GET'])
 def get_analytics(page_id):
     page_token = get_page_token(page_id)
     if not page_token:
         return jsonify({"error": "Page not connected"}), 400
     try:
-        # Fetch basic metrics
         metrics = "page_impressions_unique,page_engaged_users,page_fans,page_video_views"
         url = f"https://graph.facebook.com/v19.0/{page_id}/insights"
-        params = {
-            "metric": metrics,
-            "period": "week",
-            "access_token": page_token
-        }
+        params = {"metric": metrics, "period": "week", "access_token": page_token}
         resp = requests.get(url, params=params)
         data = resp.json()
-        # Parse out the values
-        reach = 0
-        engagement = 0
-        followers = 0
-        video_views = 0
-        daily_reach = []
+        reach = 0; engagement = 0; followers = 0; video_views = 0; daily_reach = []
         if resp.status_code == 200 and 'data' in data:
             for metric in data['data']:
                 name = metric.get('name')
@@ -399,7 +377,6 @@ def get_analytics(page_id):
                     elif name == 'page_engaged_users': engagement = val
                     elif name == 'page_fans': followers = val
                     elif name == 'page_video_views': video_views = val
-            # Optionally, process daily data for chart
             if 'page_impressions_unique' in data['data']:
                 day_values = data['data'][0].get('values', [])
                 daily_reach = [{"day": v.get('end_time', ''), "value": v.get('value', 0)} for v in day_values]
@@ -413,7 +390,6 @@ def get_analytics(page_id):
     except Exception as e:
         return jsonify({"error": str(e), "reach":0,"engagement":0,"followers":0,"video_views":0,"daily_reach":[]})
 
-# ---------- MAIN ----------
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
