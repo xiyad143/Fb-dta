@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XIYAD FACEBOOK Media Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .sidebar {
+            background: #0f172a;
+            color: white;
+        }
+        .sidebar a {
+            color: #cbd5e1;
+            transition: background 0.2s;
+        }
+        .sidebar a.active {
+            background: #1e293b;
+            color: white;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- ========== LANDING PAGE ========== -->
+    <div id="landing-page">
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <!-- Logo icon -->
+                    <svg class="w-8 h-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    <span class="text-2xl font-bold text-indigo-600">XIYAD Media Pro</span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="navigate('login')" class="px-5 py-2.5 border border-slate-300 rounded-full font-medium hover:bg-slate-50">Log in</button>
+                    <button onclick="navigate('signup')" class="px-5 py-2.5 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700">Sign up free</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero -->
+        <section class="py-20 md:py-28 text-center bg-gradient-to-b from-white to-slate-50">
+            <div class="max-w-4xl mx-auto px-4">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                    Automate Facebook Reels & Posts with AI
+                </h1>
+                <p class="mt-6 text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
+                    Connect your Facebook page, upload videos, and let AI generate captions, hashtags, and schedule everything — all from one powerful dashboard.
+                </p>
+                <div class="mt-10 flex flex-wrap justify-center gap-4">
+                    <button onclick="navigate('signup')" class="btn-primary text-lg px-8 py-4">Start Free Trial</button>
+                    <button class="px-8 py-4 border border-slate-300 rounded-full font-semibold text-slate-700 hover:bg-slate-100">How it works</button>
+                </div>
+                <!-- No fake numbers -->
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center text-slate-900">Core Features</h2>
+                <div class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="card p-6">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">AI Caption Generator</h3>
+                        <p class="mt-2 text-slate-500">Viral, business, motivational — generated instantly from your video description.</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Trending Hashtags</h3>
+                        <p class="mt-2 text-slate-500">Auto‑generated hashtags based on current trends for maximum reach.</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Smart Scheduler</h3>
+                        <p class="mt-2 text-slate-500">Schedule posts at the best times or let AI pick for you.</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Analytics Dashboard</h3>
+                        <p class="mt-2 text-slate-500">Track reach, engagement, watch time — all from real Facebook data.</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Bulk Upload</h3>
+                        <p class="mt-2 text-slate-500">Drag & drop entire folders — we handle the rest.</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900">Multi‑Page Support</h3>
+                        <p class="mt-2 text-slate-500">Manage all your Facebook pages from one account.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="py-16 bg-slate-50">
+            <div class="max-w-5xl mx-auto px-4 text-center">
+                <h2 class="text-3xl font-bold text-slate-900">How it works</h2>
+                <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-2xl font-bold">1</div>
+                        <p class="mt-4 font-medium text-slate-700">Connect your page</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-2xl font-bold">2</div>
+                        <p class="mt-4 font-medium text-slate-700">Upload videos</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-2xl font-bold">3</div>
+                        <p class="mt-4 font-medium text-slate-700">AI generates content</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-2xl font-bold">4</div>
+                        <p class="mt-4 font-medium text-slate-700">Schedule or auto‑post</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-2xl font-bold">5</div>
+                        <p class="mt-4 font-medium text-slate-700">Track analytics</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <h2 class="text-3xl font-bold text-slate-900">Simple, transparent pricing</h2>
+                <div class="mt-12 grid gap-8 lg:grid-cols-3">
+                    <div class="card p-8 flex flex-col">
+                        <h3 class="text-2xl font-bold text-slate-900">Free</h3>
+                        <div class="mt-4 text-5xl font-extrabold text-slate-900">$0</div>
+                        <ul class="mt-8 space-y-3 text-left flex-grow">
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> 1 Facebook Page</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Basic Captions</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Manual Scheduling</li>
+                        </ul>
+                        <button class="mt-8 w-full py-3 border border-slate-300 rounded-full font-semibold hover:bg-slate-50">Get Started</button>
+                    </div>
+                    <div class="card p-8 border-2 border-indigo-600 relative flex flex-col">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                        <h3 class="text-2xl font-bold text-slate-900">Pro</h3>
+                        <div class="mt-4 text-5xl font-extrabold text-slate-900">$29</div>
+                        <ul class="mt-8 space-y-3 text-left flex-grow">
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Unlimited Pages</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> AI Captions & Hashtags</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Auto‑Posting</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Analytics</li>
+                        </ul>
+                        <button class="mt-8 w-full bg-indigo-600 text-white py-3 rounded-full font-semibold hover:bg-indigo-700">Start Free Trial</button>
+                    </div>
+                    <div class="card p-8 flex flex-col">
+                        <h3 class="text-2xl font-bold text-slate-900">Agency</h3>
+                        <div class="mt-4 text-5xl font-extrabold text-slate-900">$99</div>
+                        <ul class="mt-8 space-y-3 text-left flex-grow">
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Everything in Pro</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Multi‑User</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> White Label</li>
+                            <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Bulk Automation</li>
+                        </ul>
+                        <button class="mt-8 w-full border border-slate-300 py-3 rounded-full font-semibold hover:bg-slate-50">Get Started</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="py-16 bg-indigo-600 text-white text-center">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-3xl md:text-4xl font-bold">Ready to automate your Facebook growth?</h2>
+                <p class="mt-4 text-indigo-100 text-lg">Connect your page, upload videos, and let AI do the heavy lifting.</p>
+                <button onclick="navigate('signup')" class="mt-8 inline-block bg-white text-indigo-600 px-10 py-4 rounded-full font-semibold hover:bg-indigo-50 transition">Get Started Free</button>
+            </div>
+        </section>
+
+        <!-- Footer with fixed developer info -->
+        <footer class="bg-slate-900 text-slate-400 py-8 text-center text-sm">
+            <div class="max-w-7xl mx-auto px-4">
+                <p>© 2026 <span class="font-semibold text-white">XIYAD FACEBOOK Media Pro</span>. All rights reserved.</p>
+                <p class="mt-2">Built by <span class="text-white font-medium">Riyad Mahfuz</span></p>
+                <div class="mt-3 flex justify-center gap-6">
+                    <a href="mailto:xiyad404@gmail.com" class="hover:text-white transition">📧 xiyad404@gmail.com</a>
+                    <a href="tel:+8801331373661" class="hover:text-white transition">📞 +8801331373661</a>
+                    <a href="https://facebook.com/xiyad.rd" target="_blank" class="hover:text-white transition">🌐 Facebook</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ========== LOGIN PAGE ========== -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center hidden bg-slate-50">
+        <div class="card p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-center text-slate-900">Welcome back</h2>
+            <form onsubmit="handleLogin(event)" class="mt-8 space-y-5">
+                <input type="text" placeholder="Email or username" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <input type="password" placeholder="Password" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">Sign in</button>
+            </form>
+            <div class="mt-4 text-center">
+                <a href="#" onclick="navigate('forgot-password')" class="text-indigo-600 text-sm hover:underline">Forgot password?</a>
+            </div>
+            <p class="mt-6 text-center text-sm text-slate-500">Don't have an account? <a href="#" onclick="navigate('signup')" class="text-indigo-600 font-semibold hover:underline">Sign up</a></p>
+        </div>
+    </div>
+
+    <!-- ========== SIGNUP PAGE ========== -->
+    <div id="signup-page" class="min-h-screen flex items-center justify-center hidden bg-slate-50">
+        <div class="card p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-center text-slate-900">Create your account</h2>
+            <form onsubmit="handleSignup(event)" class="mt-8 space-y-4">
+                <input type="text" placeholder="Full name" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="text" placeholder="Username" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="email" placeholder="Email address" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="password" placeholder="Password" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="password" placeholder="Confirm password" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">Sign up</button>
+            </form>
+            <p class="mt-6 text-center text-sm text-slate-500">Already have an account? <a href="#" onclick="navigate('login')" class="text-indigo-600 font-semibold hover:underline">Log in</a></p>
+        </div>
+    </div>
+
+    <!-- ========== FORGOT PASSWORD PAGE ========== -->
+    <div id="forgot-password-page" class="min-h-screen flex items-center justify-center hidden bg-slate-50">
+        <div class="card p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-center text-slate-900">Reset your password</h2>
+            <p class="mt-2 text-sm text-slate-500 text-center">Enter your email and we'll send you a reset link.</p>
+            <form onsubmit="handleForgotPassword(event)" class="mt-6 space-y-4">
+                <input type="email" placeholder="Email address" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">Send Reset Link</button>
+            </form>
+            <p class="mt-4 text-center text-sm"><a href="#" onclick="navigate('login')" class="text-indigo-600 hover:underline">Back to login</a></p>
+        </div>
+    </div>
+
+    <!-- ========== DASHBOARD ========== -->
+    <div id="dashboard-page" class="hidden">
+        <div class="flex h-screen overflow-hidden">
+            <!-- Sidebar -->
+            <aside class="sidebar w-64 flex-shrink-0 flex flex-col">
+                <div class="p-6 flex items-center gap-2">
+                    <svg class="w-8 h-8 text-indigo-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    <span class="text-2xl font-bold text-white">XIYAD</span>
+                </div>
+                <nav class="flex-1 px-4 space-y-1">
+                    <a href="#" onclick="loadTab('overview')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Overview
+                    </a>
+                    <a href="#" onclick="loadTab('pages')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                        Pages
+                    </a>
+                    <a href="#" onclick="loadTab('media')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                        Media
+                    </a>
+                    <a href="#" onclick="loadTab('ai-studio')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        AI Studio
+                    </a>
+                    <a href="#" onclick="loadTab('scheduler')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Scheduler
+                    </a>
+                    <a href="#" onclick="loadTab('analytics')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Analytics
+                    </a>
+                    <a href="#" onclick="loadTab('settings')" class="tab-link flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Settings
+                    </a>
+                </nav>
+                <div class="p-4 border-t border-slate-700">
+                    <button onclick="logout()" class="w-full flex items-center gap-2 px-4 py-2 text-slate-300 hover:text-red-400 transition rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        Logout
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto bg-slate-50 p-6 lg:p-8" id="main-content">
+                <!-- dynamic content -->
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // --- NAVIGATION ---
+        function navigate(page) {
+            document.querySelectorAll('[id$="-page"]').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(page + '-page');
+            if (target) target.classList.remove('hidden');
+            if (page === 'dashboard') loadTab('overview');
+        }
+
+        // --- TABS ---
+        function loadTab(tab) {
+            const content = document.getElementById('main-content');
+            document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.querySelector(`.tab-link[onclick="loadTab('${tab}')"]`);
+            if (activeLink) activeLink.classList.add('active');
+
+            switch(tab) {
+                case 'overview':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">Dashboard Overview</h1>
+                        <p class="text-slate-500">Connect a Facebook page to see real data.</p>
+                        <button onclick="fetchPages()" class="mt-4 px-6 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700">Fetch My Pages</button>
+                        <div id="page-cards" class="grid gap-6 mt-8 sm:grid-cols-2 lg:grid-cols-3"></div>`;
+                    break;
+                case 'pages':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">Your Facebook Pages</h1>
+                        <button onclick="fetchPages()" class="px-6 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700">Refresh Pages</button>
+                        <div id="page-list" class="grid gap-6 mt-8 sm:grid-cols-2 lg:grid-cols-3"></div>`;
+                    break;
+                case 'media':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">Media Library</h1>
+                        <div class="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
+                            <svg class="mx-auto w-12 h-12 text-slate-400 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            Drag & drop videos or click to browse
+                        </div>`;
+                    break;
+                case 'ai-studio':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">AI Studio</h1>
+                        <div class="grid gap-8 lg:grid-cols-2">
+                            <div class="card p-6">
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Describe your video</label>
+                                <textarea id="video-desc" rows="4" class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="E.g. 'Gym motivation reel'"></textarea>
+                                <button onclick="generateAI()" class="mt-4 w-full py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition">Generate Caption & Hashtags</button>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="card p-4">
+                                    <h3 class="font-medium text-slate-700">Caption</h3>
+                                    <p id="ai-caption" class="mt-2 text-slate-500 min-h-[60px]">Your AI caption will appear here</p>
+                                </div>
+                                <div class="card p-4">
+                                    <h3 class="font-medium text-slate-700">Hashtags</h3>
+                                    <p id="ai-hashtags" class="mt-2 text-slate-500 min-h-[60px]"></p>
+                                </div>
+                            </div>
+                        </div>`;
+                    break;
+                case 'scheduler':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">Post Scheduler</h1>
+                        <p class="text-slate-500">Select a page and a video to schedule a post.</p>
+                        <div class="mt-8 card p-6 text-center text-slate-400">Scheduler UI will be displayed once pages and media are connected.</div>`;
+                    break;
+                case 'analytics':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">Analytics</h1>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="card p-4"><div class="text-2xl font-bold text-slate-900" id="reach-count">0</div><div class="text-sm text-slate-500">Reach</div></div>
+                            <div class="card p-4"><div class="text-2xl font-bold text-slate-900" id="engagement-count">0</div><div class="text-sm text-slate-500">Engagement</div></div>
+                            <div class="card p-4"><div class="text-2xl font-bold text-slate-900" id="followers-count">0</div><div class="text-sm text-slate-500">Followers</div></div>
+                            <div class="card p-4"><div class="text-2xl font-bold text-slate-900" id="views-count">0</div><div class="text-sm text-slate-500">Video Views</div></div>
+                        </div>
+                        <div class="card p-6 mt-6">
+                            <canvas id="analyticsChart" height="100"></canvas>
+                        </div>
+                        <script>
+                            new Chart(document.getElementById('analyticsChart'), {
+                                type: 'line',
+                                data: { labels: [], datasets: [{ label: 'Reach', data: [], borderColor: '#4f46e5' }] },
+                                options: { responsive: true }
+                            });
+                        <\/script>`;
+                    break;
+                case 'settings':
+                    content.innerHTML = `
+                        <h1 class="text-3xl font-bold text-slate-900 mb-6">Facebook API Settings</h1>
+                        <div class="card p-6 max-w-xl">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Facebook App ID</label>
+                            <input id="app-id" type="text" class="w-full p-3 border border-slate-300 rounded-lg mb-4 outline-none focus:ring-2 focus:ring-indigo-500" />
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Facebook App Secret</label>
+                            <input id="app-secret" type="password" class="w-full p-3 border border-slate-300 rounded-lg mb-4 outline-none focus:ring-2 focus:ring-indigo-500" />
+                            <button onclick="saveCredentials()" class="w-full py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition">Save Credentials</button>
+                            <p id="settings-msg" class="mt-3 text-sm text-green-600 hidden">✓ Credentials saved successfully</p>
+                        </div>`;
+                    break;
+            }
+        }
+
+        // --- API HANDLERS (BACKEND MUST BE RUNNING) ---
+        const API = 'http://localhost:5000';
+
+        function getToken() {
+            return localStorage.getItem('token') || '';
+        }
+
+        async function fetchPages() {
+            const container = document.getElementById('page-cards') || document.getElementById('page-list');
+            if (!container) return;
+            try {
+                const resp = await fetch(`${API}/api/pages`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+                const data = await resp.json();
+                if (data.pages && data.pages.length > 0) {
+                    container.innerHTML = data.pages.map(p => `
+                        <div class="card p-5">
+                            <h3 class="font-semibold text-lg">${p.name}</h3>
+                            <p class="text-slate-500">${p.fan_count ?? '?'} followers</p>
+                            <button class="mt-3 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-200">Select</button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-slate-500 col-span-full">No pages connected. Please connect your Facebook account in Settings.</p>';
+                }
+            } catch (e) {
+                container.innerHTML = '<p class="text-red-500">Failed to fetch pages. Ensure backend is running.</p>';
+            }
+        }
+
+        async function generateAI() {
+            const desc = document.getElementById('video-desc').value;
+            if (!desc) return alert('Please enter a video description.');
+            try {
+                const resp = await fetch(`${API}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ description: desc })
+                });
+                const data = await resp.json();
+                document.getElementById('ai-caption').innerText = data.caption || 'No caption generated.';
+                document.getElementById('ai-hashtags').innerText = data.hashtags || '';
+            } catch (e) {
+                alert('AI service not reachable. Check backend.');
+            }
+        }
+
+        async function saveCredentials() {
+            const appId = document.getElementById('app-id').value;
+            const appSecret = document.getElementById('app-secret').value;
+            try {
+                const resp = await fetch(`${API}/api/settings/facebook`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ app_id: appId, app_secret: appSecret })
+                });
+                if (resp.ok) {
+                    document.getElementById('settings-msg').classList.remove('hidden');
+                }
+            } catch (e) {
+                alert('Failed to save credentials.');
+            }
+        }
+
+        // --- AUTH SIMULATIONS (replace with real API calls) ---
+        function handleLogin(e) {
+            e.preventDefault();
+            // In production: POST /api/login, receive token
+            localStorage.setItem('token', 'demo-token');
+            navigate('dashboard');
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            // In production: POST /api/signup, receive token
+            localStorage.setItem('token', 'demo-token');
+            navigate('dashboard');
+        }
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            alert('Password reset link sent (simulated).');
+            navigate('login');
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            navigate('landing');
+        }
+
+        // Start on landing page
+        navigate('landing');
+    </script>
+</body>
+</html>
